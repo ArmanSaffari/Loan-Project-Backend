@@ -1,0 +1,70 @@
+const { DataTypes } = require("sequelize");
+const sequelize = require("../db");
+//create Models
+const User = sequelize.define(
+  "User",
+  {
+    id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
+    },
+    emailAddress: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    password: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    firstName: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    lastName: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    personnelCode: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    nationalCode: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    employmentStatus: {
+      type: DataTypes.STRING,
+    },
+    homeAddress: {
+      type: DataTypes.STRING,
+    },
+    zipCode: {
+      type: DataTypes.STRING,
+    },
+    phoneNumber: {
+      type: DataTypes.INTEGER,
+    },
+    isAdmin: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
+    isActiveUser: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true,
+    },
+    membershipDate: {
+      type: DataTypes.DATEONLY,
+      allowNull: false,
+      defaultValue: DataTypes.NOW,
+    },
+    UserPictureAddress: {
+      type: DataTypes.STRING,
+    },
+  },
+  {}
+);
+
+module.exports = User;
