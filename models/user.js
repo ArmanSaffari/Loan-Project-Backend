@@ -1,6 +1,6 @@
 const { DataTypes } = require("sequelize");
-const sequelize = require("../db");
-
+const sequelize = require("../configs/db");
+//create Models
 const User = sequelize.define(
   "User",
   {
@@ -64,7 +64,7 @@ const User = sequelize.define(
       type: DataTypes.STRING,
     },
   },
-  {}
+  { paranoid: true }
 );
 
 module.exports = User;
