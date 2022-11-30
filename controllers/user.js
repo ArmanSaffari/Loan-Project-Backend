@@ -17,8 +17,8 @@ const register = async (req, res) => {
       isAdmin: true,
       isActiveUser: true,
     };
-    createUser(data);
-    res.json({ success: true });
+    await createUser(data);
+    res.status(201).json({ success: true });
   } catch (error) {
     console.error(error);
   }
