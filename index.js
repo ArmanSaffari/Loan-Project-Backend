@@ -25,4 +25,12 @@ const init = () => {
     });
 };
 
-app.listen(4000, init);
+//for test
+const jwt = require('jsonwebtoken');
+jwt.sign({ user: 'xxx' }, 'Arman', { expiresIn: 3600 }, function(err, token) {
+  console.log(token);
+  let test = jwt.verify(token,'Arman');
+  console.log(test);
+});
+
+app.listen(4000);
