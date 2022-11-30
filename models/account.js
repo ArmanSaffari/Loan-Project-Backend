@@ -21,8 +21,8 @@ const Account = sequelize.define(
 			type: DataTypes.DECIMAL,
 			allowNull: false
 		},
-	}
-	,{}
+	},
+	{ paranoid: true }
 );
 
 module.exports = Account;

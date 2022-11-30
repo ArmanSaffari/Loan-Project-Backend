@@ -47,7 +47,7 @@ const Loan = sequelize.define(
 			type: DataTypes.STRING
 		}
 	},
-	{}
+	{ paranoid: true }
 );
 
 //define relationships
