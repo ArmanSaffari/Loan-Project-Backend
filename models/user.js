@@ -30,7 +30,7 @@ const User = sequelize.define(
       allowNull: false,
     },
     nationalCode: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.STRING,
       allowNull: false,
     },
     employmentStatus: {
