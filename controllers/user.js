@@ -2,11 +2,12 @@ const router = require("express").Router();
 const createUser = require("../services/user/create");
 
 const register = async (req, res) => {
+  const { firstName } = req.body;
   try {
     const data = {
       emailAddress: "",
       password: "",
-      firstName: req.body.name,
+      firstName,
       lastName: "",
       personnelCode: 12,
       nationalCode: 386109151,
