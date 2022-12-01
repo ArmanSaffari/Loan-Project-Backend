@@ -43,7 +43,7 @@ const User = sequelize.define(
       type: DataTypes.STRING,
     },
     phoneNumber: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.STRING,
     },
     isAdmin: {
       type: DataTypes.BOOLEAN,
