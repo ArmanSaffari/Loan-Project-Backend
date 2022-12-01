@@ -5,8 +5,8 @@ const registerValidation = require("../schema/user/register");
 const register = async (req, res) => {
   const receivedData = req.body;
   try {
-    const validationError = await registerError(receivedData);
-    if (!validationError) {
+    const { error } = await registerValidation(receivedData)
+    if (!error) {
       const data = {
         // emailAddress: "",
         // password: "",
@@ -25,10 +25,10 @@ const register = async (req, res) => {
       await createUser(data);
       res.status(201).json({ success: true });
     } else {
-      res.status(422).json({ validationError });
+      res.status(422).json({ error });
     }
   } catch (error) {
-    console.error("error");
+    console.error(error);
   }
 };
 

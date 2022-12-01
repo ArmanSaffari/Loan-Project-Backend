@@ -28,9 +28,9 @@ const schema = Joi.object({
 		.pattern(new RegExp('^[0-9]{10,14}')),
 });
 
-const registerError = async (registerData) => {
-		const {error, value} = await schema.validate(registerData);
-		return error
+const registerValidation = async (registerData) => {
+		const validation = await schema.validate(registerData);
+		return validation
 }
 
-module.exports = registerError;
+module.exports = registerValidation;
