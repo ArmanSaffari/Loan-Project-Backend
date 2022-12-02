@@ -12,6 +12,7 @@ const User = sequelize.define(
     emailAddress: {
       type: DataTypes.STRING,
       allowNull: false,
+      unique: true
     },
     password: {
       type: DataTypes.STRING,
@@ -32,6 +33,7 @@ const User = sequelize.define(
     nationalCode: {
       type: DataTypes.STRING,
       allowNull: false,
+      unique: true
     },
     employmentStatus: {
       type: DataTypes.ENUM("permanent full-time", "temporary full-time", "part-time"),
@@ -44,6 +46,7 @@ const User = sequelize.define(
     },
     phoneNumber: {
       type: DataTypes.STRING,
+      unique: true
     },
     isAdmin: {
       type: DataTypes.BOOLEAN,
