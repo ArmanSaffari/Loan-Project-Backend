@@ -34,7 +34,7 @@ const User = sequelize.define(
       allowNull: false,
     },
     employmentStatus: {
-      type: DataTypes.STRING,
+      type: DataTypes.ENUM("permanent full-time", "temporary full-time", "part-time"),
     },
     homeAddress: {
       type: DataTypes.STRING,

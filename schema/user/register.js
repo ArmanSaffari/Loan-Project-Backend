@@ -29,8 +29,8 @@ const schema = Joi.object({
 });
 
 const registerValidation = async (registerData) => {
-		const validation = await schema.validate(registerData);
+		const validation = schema.validate(registerData);
 		return validation
-}
+};
 
 module.exports = registerValidation;

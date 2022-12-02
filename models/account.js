@@ -18,7 +18,7 @@ const Account = sequelize.define(
 			allowNull: false
 		},
 		balance: {
-			type: DataTypes.DECIMAL,
+			type: DataTypes.DECIMAL(15,2),
 			allowNull: false
 		},
 	},

@@ -12,7 +12,7 @@ const MembershipFee = sequelize.define(
 			primaryKey: true
 		},
 		monthlyMembershipFee: {
-			type: DataTypes.DECIMAL,
+			type: DataTypes.DECIMAL(15,2),
 			allowNull: false
 		},
 	},

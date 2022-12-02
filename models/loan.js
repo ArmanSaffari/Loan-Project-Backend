@@ -13,7 +13,7 @@ const Loan = sequelize.define(
 			primaryKey: true
 		},
 		loanAmount: {
-			type: DataTypes.DECIMAL,
+			type: DataTypes.DECIMAL(15,2),
 			allowNull: false
 		},
 		loanType: { // normal / urgent
@@ -29,7 +29,7 @@ const Loan = sequelize.define(
 			allowNull: false
 		},
 		administerationFee: {
-			type: DataTypes.DECIMAL
+			type: DataTypes.DECIMAL(15,2)
 		},
 		installmentNo: {
 			type: DataTypes.INTEGER
