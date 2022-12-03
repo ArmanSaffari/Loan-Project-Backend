@@ -5,7 +5,7 @@ const Loan = require("../models/loan");
 const MembershipFee = require("../models/membershipFee");
 
 const syncTables = async () => {
-  await sequelize.sync({});// alter: true });
+  await sequelize.sync({ alter: true });
 };
 
 module.exports = syncTables;

@@ -3,11 +3,18 @@ require("dotenv").config();
 const sequelize = require("./configs/db");
 const syncTables = require("./configs/sync");
 const routes = require("./routes");
-
+const cors = require("cors");
 const env = process.env;
 const express = require("express");
 const app = express();
+
+const corsOptions = {
+  origin: 'http://localhost:3000/',
+  optionsSuccessStatus: 200
+}
+
 app.use(express.json());
+app.use(cors(corsOptions))
 app.use("/api", routes);
 app.get("/", (req, res) => {
   res.send("hi 34");

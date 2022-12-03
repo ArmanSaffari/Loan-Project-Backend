@@ -33,8 +33,7 @@ const signin = async (req, res) => {
     if (error) {throw error}
     // create token
     const token = jwt.sign({ verifiedUser }, env.SECRET_KEY, {expiresIn: "1 day"});
-    res.set('token', token)
-    res.status(200).json({ sucess: true })
+    res.status(200).json({ sucess: true , token: token})
   } catch (error) {
     res.status(401).json({ error })
   }
@@ -43,9 +42,7 @@ const signin = async (req, res) => {
 
 const tokenCheck = async (req, res) => {
   try {
-    await jwt.verify(req.header('token'), env.SECRET_KEY, (err, result) => {
-      console.log("error: ", err)
-      console.log("result: ", result)
+    jwt.verify(req.header('token'), env.SECRET_KEY, (err, result) => {
       if (err) {throw {error: "not authorized"}}
       res.status(200).json({ result })
     });
