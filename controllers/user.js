@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const createUser = require("../services/user/create");
 const registerValidation = require("../schema/user/register");
+const signinValidation = require("../schema/user/signin");
 const checkUniqueValues = require("../services/user/checkUnique");
 const checkUser = require("../services/user/signin");
 const bcrypt = require("bcrypt");
@@ -26,9 +27,9 @@ const register = async (req, res) => {
 const signin = async (req, res) => {
   const receivedData = req.body;
   try {
+    await signinValidation(receivedData);
     // verify email and password
     const { verifiedUser } = await checkUser(receivedData);
-    // if (error) {throw error}
     // create token
     const token = jwt.sign({ verifiedUser }, env.SECRET_KEY, {
       expiresIn: "1 day",
