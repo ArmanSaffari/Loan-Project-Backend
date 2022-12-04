@@ -12,7 +12,9 @@ const checkUniqueValues = async (data) => {
       ],
     },
   });
-  if (existingData.dataValues.emailAddress === data.emailAddress) {
+  if (!existingData) {
+    return true;
+  } else if (existingData.dataValues.emailAddress === data.emailAddress) {
     throw { message: "the email already registered" };
   } else if (existingData.dataValues.phoneNumber === data.phoneNumber) {
     throw { message: "the phone number already registered" };
