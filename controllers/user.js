@@ -12,15 +12,9 @@ const register = async (req, res) => {
   receivedData.password = bcrypt.hashSync(receivedData.password, 5);
   try {
     // validate values
-    const { error } = await registerValidation(receivedData);
-    if (error) {
-      throw error;
-    }
+    await registerValidation(receivedData);
     // check being unique in db
-    const isExist = await checkUniqueValues(receivedData);
-    if (isExist) {
-      throw isExist;
-    }
+    await checkUniqueValues(receivedData);
     //create user
     await createUser(receivedData);
     res.status(201).json({ success: true });

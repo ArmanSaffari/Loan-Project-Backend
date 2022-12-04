@@ -2,7 +2,7 @@ const user = require("../../models/user");
 const bcrypt = require("bcrypt");
 
 const checkUser = async (data) => {
-  const error = "email address or password is not correct";
+  const error = { message: "email address or password is not correct" };
   try {
     const foundUser = await user.findOne({
       where: { emailAddress: data.emailAddress },
