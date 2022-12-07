@@ -13,12 +13,17 @@ const corsOptions = {
   optionsSuccessStatus: 200
 }
 
+const path = require('path')
+// app.use("/uploads", express.static('uploads'));
+
 app.use(express.json());
-app.use(cors(corsOptions))
+app.use(cors())
 app.use("/api", routes);
 app.get("/", (req, res) => {
   res.send("hi 34");
 });
+
+app.use(express.static( path.join(__dirname, '/uploads')))
 
 const init = async () => {
   try {

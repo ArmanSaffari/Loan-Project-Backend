@@ -4,6 +4,8 @@ const registerValidation = require("../schema/user/register");
 const signinValidation = require("../schema/user/signin");
 const checkUniqueValues = require("../services/user/checkUnique");
 const checkUser = require("../services/user/signin");
+const tokenCheck = require("../middlewares/tokenCheck");
+const uploadPhoto = require("../middlewares/uploadPhoto");
 const bcrypt = require("bcrypt");
 var jwt = require("jsonwebtoken");
 const env = process.env;
@@ -40,21 +42,24 @@ const signin = async (req, res) => {
   }
 };
 
-const tokenCheck = async (req, res) => {
-  try {
-    jwt.verify(req.header("token"), env.SECRET_KEY, (err, result) => {
-      if (err) {
-        throw { error: "not authorized" };
-      }
-      res.status(200).json({ result });
-    });
-  } catch (error) {
-    res.status(401).json({ error });
+// using Multer
+const multer = require('multer');
+const path = require('path');
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, './uploads/users/')
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + path.extname(file.originalname)
+      cb(null, file.fieldname + '-' + uniqueSuffix)
   }
-};
+})
+const upload = multer({ storage: storage });
 
 router.post("/register", register);
 router.post("/signin", signin);
 router.get("/tokenCheck", tokenCheck);
+router.post("/uploadPhoto", upload.single('myFile'), uploadPhoto)
 
 module.exports = router;
