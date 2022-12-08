@@ -27,7 +27,7 @@ const User = sequelize.define(
       allowNull: false,
     },
     personnelCode: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.INTEGER.UNSIGNED,
       allowNull: false,
       unique: true
     },
@@ -64,7 +64,7 @@ const User = sequelize.define(
       allowNull: false,
       defaultValue: DataTypes.NOW,
     },
-    UserPictureAddress: {
+    userPictureAddress: {
       type: DataTypes.STRING,
     },
   },

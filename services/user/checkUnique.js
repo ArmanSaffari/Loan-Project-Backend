@@ -21,7 +21,7 @@ const checkUniqueValues = async (data) => {
   } else if (existingData.dataValues.nationalCode === data.nationalCode) {
     throw { message: "the national code already registered" };
   } else if (existingData.dataValues.personnelCode === data.personnelCode) {
-    throw { message: "the personnelCode code already registered" };
+    throw { message: "the personnel code already registered" };
   }
 };
 

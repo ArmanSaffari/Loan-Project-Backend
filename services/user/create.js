@@ -1,7 +1,7 @@
 const user = require("../../models/user");
 
 const createUser = async (data) => {
-  await user.create(data);
+  console.log("data in createUser: ", data.personnelCode)
 };
 
 module.exports = createUser;

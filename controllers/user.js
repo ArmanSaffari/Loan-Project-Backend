@@ -7,10 +7,12 @@ const checkUser = require("../services/user/signin");
 const tokenCheck = require("../middlewares/tokenCheck");
 const uploadPhoto = require("../middlewares/uploadPhoto");
 const bcrypt = require("bcrypt");
-var jwt = require("jsonwebtoken");
+const fs = require('fs');
+const { Buffer } = require('buffer');
+const jwt = require("jsonwebtoken");
 const env = process.env;
 
-const register = async (req, res) => {
+const register = async (req, res, next) => {
   const receivedData = req.body;
   receivedData.password = bcrypt.hashSync(receivedData.password, 5);
   try {
@@ -26,6 +28,45 @@ const register = async (req, res) => {
   }
 };
 
+const registerWithPhoto = async (req, res, next) => {
+  const receivedData = JSON.parse(req.body.userData);
+  //Reigster
+  receivedData.password = bcrypt.hashSync(receivedData.password, 5);
+  try {
+    // validate values
+    await registerValidation(receivedData);
+    // check being unique in db
+    await checkUniqueValues(receivedData);
+    // save user photo
+    let message = "";
+    if (req.file) {
+      const fileBuffer = req.file.buffer;
+      receivedData.userPictureAddress = "uploads/users/" + receivedData.personnelCode + path.extname(req.file.originalname);
+      fs.writeFile(`./${receivedData.userPictureAddress}`, fileBuffer, async (err) => {
+        if (err) {
+          message = "but user photo did not uploaded successfully";
+        } else {
+          message = "and user photo uploaded successfully";
+        }
+      })
+    }
+    // create user
+    await createUser(receivedData);
+    message = `Registeration was successful ${message}.`;
+    // create token
+    const registeredUser = receivedData;
+    delete registeredUser.password;
+    const token = jwt.sign({ registeredUser }, env.SECRET_KEY, {
+      expiresIn: "1 day",
+    });
+    res.status(201).json({ success: true,
+      message: message,
+      token: token });
+  } catch (error) {
+    res.status(422).json({ success: false, error });
+  }
+};
+
 const signin = async (req, res) => {
   const receivedData = req.body;
   try {
@@ -36,7 +77,10 @@ const signin = async (req, res) => {
     const token = jwt.sign({ verifiedUser }, env.SECRET_KEY, {
       expiresIn: "1 day",
     });
-    res.status(200).json({ sucess: true, token: token });
+    res.status(200).json({
+      sucess: true,
+      token: token,
+      message: `Hello ${verifiedUser.firstName} ${verifiedUser.lastName}!`, });
   } catch (error) {
     res.status(400).json({ sucess: false, error });
   }
@@ -55,11 +99,15 @@ const storage = multer.diskStorage({
       cb(null, file.fieldname + '-' + uniqueSuffix)
   }
 })
+
 const upload = multer({ storage: storage });
+const uploadMemory = multer({ storage: multer.memoryStorage() })
 
 router.post("/register", register);
+router.post("/registerWithPhoto", uploadMemory.single('userPhoto'), registerWithPhoto)
+
 router.post("/signin", signin);
 router.get("/tokenCheck", tokenCheck);
-router.post("/uploadPhoto", upload.single('myFile'), uploadPhoto)
+router.post("/uploadPhoto", upload.single('userPhoto'), uploadPhoto)
 
 module.exports = router;
