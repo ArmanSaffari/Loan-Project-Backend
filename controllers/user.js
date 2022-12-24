@@ -107,7 +107,7 @@ router.post("/register", register);
 router.post("/registerWithPhoto", uploadMemory.single('userPhoto'), registerWithPhoto)
 
 router.post("/signin", signin);
-router.get("/tokenCheck", tokenCheck);
+router.get("/tokenCheck", tokenCheck, (req, res) => {res.status(200).json({ success: true })});
 router.post("/uploadPhoto", upload.single('userPhoto'), uploadPhoto)
 
 module.exports = router;
