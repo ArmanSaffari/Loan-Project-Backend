@@ -45,11 +45,26 @@ const getWaitingPayment = async (req, res) => {
   }
 };
 
+/*
+find the payment row from Payments 
+obtain related userId
+find active loans (user-id)
+query sumation of payed installments so far
+calculate the amount that should be paid so far with related date!
+calculate late installment payment fine!
+query sumation of payed membershipfee so far
+calculate the amount that should be paid so far with related date!
+calculate late mem fee payment fine!
+assign payments and create records
+*/
 const confirmPayment = async (req, res) => {
-  const error = "please specify id of payments to be confirmed!";
   try {
     const paymentRecords = req.body.paymentList;
     const confirmedBy = req.userId;
+    // for (paymentRecord in paymentRecords) {
+    //assignPayment(x)
+    // }
+
     await paymentRecords.map(id => updatePayment(id, confirmedBy));
     res.status(200).json({
       success: true,
