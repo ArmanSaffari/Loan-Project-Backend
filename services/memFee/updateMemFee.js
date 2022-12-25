@@ -1,21 +1,20 @@
 const MembershipFee = require("../../models/membershipFee")
 
-const updateMemFee = async (memFeeId) => {
-  let response = false;
+const updateMemFee = async (memFeeId, confirmedBy) => {
   try {
     const foundMemFee = await MembershipFee.findOne({
       where: {
         id: memFeeId
       }
-    })
+    });
     if (foundMemFee === null) {
       console.log("nothing found")
-      response = "a";
     } else {
-      await foundMemFee.update({confirmation: true})
-      response = "b";
+      await foundMemFee.update({
+        confirmation: true,
+        confirmedAdminId: confirmedBy
+      });
     }
-    return response
   } catch(err) {
     console.log("error is: ", err)
   }

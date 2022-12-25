@@ -84,11 +84,11 @@ const getWaitingMemFee = async (req, res) => {
 }
 
 const confirmMemFee = async (req, res) => {
+  const error = { message: "please specify id of membership fee records to be confirmed" };
   try {
-    const error = { message: "please specify id of membership fee records to be confirmed" }
     const memFeeRecords = req.body.membershipFeeIdList;
-    let result = [];
-    await memFeeRecords.map (id => updateMemFee(id));
+    const confirmedBy = req.userId;
+    await memFeeRecords.map (id => updateMemFee(id, confirmedBy));
     await res.status(200).json({
       success: true,
       message: "done!"

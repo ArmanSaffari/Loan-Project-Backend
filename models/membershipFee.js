@@ -18,7 +18,10 @@ const MembershipFee = sequelize.define(
 		confirmation: {
 			type: DataTypes.BOOLEAN,
 			defaultValue: false
-		}
+		},
+		confirmedAdminId: {
+      type: DataTypes.INTEGER,
+    }
 	},
 	{ paranoid: true }
 );
