@@ -5,10 +5,11 @@ const addMemFee = require("../services/memFee/addMemFee");
 const waitingMemFee = require("../services/memFee/waitingMemFee");
 const adminCheck = require("../middlewares/adminCheck");
 const updateMemFee = require("../services/memFee/updateMemFee");
+
 const getLastMemFee = async (req, res) => {
   const error = { message: "Monthly Membership Fee has not been set yet!" }
   try {
-    const memFeeList = await findMemFee(req.userId)
+    const memFeeList = await findMemFee(req.userId);
     if (!memFeeList) throw error
     res.status(200).json({
       success: true,
@@ -32,7 +33,8 @@ const setMemFee = async (req, res) => {
       // add new record to membershipFee table
       await addMemFee({ 
         UserId: req.userId,
-        monthlyMembershipFee: newMemFee
+        monthlyMembershipFee: newMemFee,
+        effectiveFrom: req.body.effectiveFrom
       });
       res.status(200).json({
         success: true,

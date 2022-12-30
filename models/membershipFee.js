@@ -15,6 +15,10 @@ const MembershipFee = sequelize.define(
 			type: DataTypes.DECIMAL(15,2),
 			allowNull: false
 		},
+		effectiveFrom: {
+			type: DataTypes.DATEONLY,
+			allowNull: false
+		},
 		confirmation: {
 			type: DataTypes.BOOLEAN,
 			defaultValue: false

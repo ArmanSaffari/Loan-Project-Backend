@@ -9,7 +9,7 @@ const tokenCheck = async (req, res, next) => {
       }
       const tokenData = jwt.decode(req.header("token"));
       req.userId = tokenData.verifiedUser.id;
-      req.isAdmin = tokenData.verifiedUser.isAdmin;
+      req.userData = tokenData.verifiedUser;
       next()
     });
   } catch (error) {

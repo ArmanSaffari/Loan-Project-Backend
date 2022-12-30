@@ -17,7 +17,7 @@ const Loan = sequelize.define(
 			allowNull: false
 		},
 		loanType: { // normal / urgent
-			type: DataTypes.STRING,
+			type: DataTypes.ENUM('normal', 'urgent'),
 			allowNull: false,
 			defaultValue: "normal"
 		},
@@ -25,8 +25,9 @@ const Loan = sequelize.define(
 			type: DataTypes.DATEONLY,
 		},
 		loanStatus: { //requested / active / terminated
-			type: DataTypes.STRING,
-			allowNull: false
+			type: DataTypes.ENUM('requested', 'waitlisted', 'rejected', 'active', 'terminated'),
+			allowNull: false,
+			defaultValue: "requested"
 		},
 		administerationFee: {
 			type: DataTypes.DECIMAL(15,2)
