@@ -1,11 +1,11 @@
 const Loan = require("../../models/loan");
 const sequelize = require("../../configs/db");
 
-const findLoansByUser = async (userId) => {
+const findLoansByStatus = async (loanStatus) => {
   try {
     const foundLoans = await Loan.findAll({
       where: {
-        UserId: userId
+        loanStatus: loanStatus
       }
     });
     return foundLoans.map(row => row.dataValues)
@@ -15,4 +15,4 @@ const findLoansByUser = async (userId) => {
 };
 
 
-module.exports = findLoansByUser;
+module.exports = findLoansByStatus;

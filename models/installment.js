@@ -9,6 +9,7 @@ const Installment = sequelize.define(
   {
     id: {
       type: DataTypes.INTEGER,
+      autoIncrement: true,
       primaryKey: true
     },
     amount: {

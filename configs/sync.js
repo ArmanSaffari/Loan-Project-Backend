@@ -4,7 +4,7 @@ const Loan = require("../models/loan");
 const MembershipFee = require("../models/membershipFee");
 const Payment = require("../models/payment");
 const MembershipPayment = require("../models/membershipPayment");
-const Installment = require("../models/installment")
+const Installment = require("../models/installment");
 
 const syncTables = async () => {
   await User.sync({ alter: true });

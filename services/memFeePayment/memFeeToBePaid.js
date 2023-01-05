@@ -12,11 +12,9 @@ const memFeeToBePaid = async (givenDate, userId) => {
     return {
       message: "Payment can not be processed while there is still membership fee request unconfirmed!",
       value: false,
-      memFeeBeforeGivenDate: memFeeBeforeGivenDate,
-      unconfirmedMemFeeList: unconfirmedMemFeeList,
-      memFeeList: memFeeList
     }
   } else {
+    let lastMemFee = memFeeBeforeGivenDate[0].monthlyMembershipFee;
     memFeeBeforeGivenDate = memFeeBeforeGivenDate.reverse();
     const toBePaid = memFeeBeforeGivenDate.reduce( (accumulator, value, index, array) => {
       let startDate = new Date (value.effectiveFrom);
@@ -27,12 +25,13 @@ const memFeeToBePaid = async (givenDate, userId) => {
         (endDate.getMonth() - startDate.getMonth() +
         12 * (endDate.getFullYear() - startDate.getFullYear()))
         )
-      return parseFloat(accumulator) + parseFloat(thisPeriodPayment);
+      return parseFloat(accumulator) + parseFloat(thisPeriodPayment)
     },0);
     
     return {
       message: "",
-      value: toBePaid
+      value: toBePaid,
+      lastMemFee: lastMemFee
     }  
   }
 }

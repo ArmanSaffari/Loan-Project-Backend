@@ -9,6 +9,9 @@ const findInstallmentsSummary = require("../services/installment/findInstallment
 const sumOfMemFee = require("../services/memFeePayment/sumOfMemFee");
 const memFeeToBePaid = require("../services/memFeePayment/memFeeToBePaid");
 const findLoansByUser = require("../services/loan/findLoansByUser");
+const addMemFeePayment = require("../services/memFeePayment/addMemFeePayment");
+const addInstallment = require("../services/installment/addInstallment")
+const getPaymentData = require("../services/payment/getPaymentData");
 
 const addPayment = async (req, res) => {
   try {
@@ -55,9 +58,6 @@ const confirmPayment = async (req, res) => {
   try {
     const paymentRecords = req.body.paymentList.map(row => row.id);
     const confirmedBy = req.userId;
-    // for (paymentRecord in paymentRecords) {
-    //assignPayment(x)
-    // }
 
     await paymentRecords.map(id => updatePayment(id, confirmedBy));
     res.status(200).json({
@@ -73,79 +73,123 @@ const confirmPayment = async (req, res) => {
 };
 
 const paymentAssignment = async (req, res) => {
-  const error = { message: "The user id does not match the information of the payment!"}
-  
+  const confirmedBy = req.userId;
   try {
-    let userData, message, loanPaymentDate, installmentToBePaid, installments;
+    let response = [];
     // loop over payments that are going to be confirmed and assigned!
     for (let index = 0; index < req.body.paymentList.length; index++) {
-      let userData = [];
       let payment = req.body.paymentList[index];
       let foundPayment = await findPayment(payment.id);
+      payment.amount = foundPayment.amount;
       // console.log("foundPayment: ", foundPayment);
       // check the username in req body matches the payment id
       if (foundPayment.UserId != payment.UserId) {
-        throw error
-      }
+        payment.message = "The user id does not match the information of the payment!";
+      } else if (foundPayment.confirmation == true) {
       // check whether the payment is already confirmed
-      if (foundPayment.confirmation == true) {
-        message = "The payment is already confirmed!"
-        console.log(message)
+        payment.message = "The payment is already confirmed!";
       } else {
-        let currentDate = new Date();
-        // (1) evaluate membership payments:
-
-        // find how many membership fee should be paid so far
-        let membershipDate = new Date(req.userData.membershipDate);
-          
-        userData = {
+        // gather payments history up to now:
+        let userData = await getPaymentData({
           userId: payment.UserId,
-          membershipDate: membershipDate,
-          memFeeToBePaid: await memFeeToBePaid(currentDate, payment.UserId),
-          memFee: await sumOfMemFee(payment.UserId),
-          installments: [],
-          dataGateringDate: currentDate
+          membershipDate: req.userData.membershipDate
+        }); 
+        console.log("userData : ", userData)
+        
+        // // assign payment pased on userDate:
+        let remainedAmount = payment.amount;
+        let processingAmount = 0;
+        payment.addedRecords = [];
+
+        // (1) pay unpaid memFees
+        if (userData.memFeeRemained > 0) {
+          processingAmount = (userData.memFeeRemained < remainedAmount) ?
+            userData.memFeeRemained : remainedAmount;
+          await addMemFeePayment({
+            PaymentId: payment.id,
+            amount: processingAmount
+          })
+          remainedAmount = parseFloat(remainedAmount) - parseFloat(processingAmount);
+          payment.addedRecords.push({
+            table: "membershipPayments",
+            amount: parseFloat(processingAmount)
+          });
         }
 
-        // (2) evaluate loans
-        let activeLoans = await findLoansByUser(foundPayment.UserId, 'active');
-        
-        if (activeLoans) {
-          // userData.installments = [];
-          for (let loanIndex = 0; loanIndex < activeLoans.length; loanIndex++) {
-            let installmentData = await findInstallmentsSummary(activeLoans[loanIndex].id);
-            
-            // find how many installments should be paid so far
-            loanPaymentDate = new Date(activeLoans[loanIndex].loanPaymentDate);
-            installmentToBePaid = 
-              currentDate.getMonth() - loanPaymentDate.getMonth() +
-              12 * (currentDate.getFullYear() - loanPaymentDate.getFullYear());
-
-            if (currentDate.getDate() < loanPaymentDate.getDate()) {
-              installmentToBePaid--;
-            }
-
-            userData.installments[loanIndex] = {
-              loanId: activeLoans[loanIndex].id,
-              loanPaymentDate: loanPaymentDate,
-              installmentToBePaid: installmentToBePaid,
-              ...installmentData[0]
-            };
-            
+        // (2) pay unpaid installments
+        for (let instIndex = 0; instIndex < userData.numberOfActiveLoans; instIndex++) {
+          let instRecord = userData.installments[instIndex];
+          // console.log("instRecord: ", instRecord);
+          let toBePaid = instRecord.installmentAmountToBePaid - instRecord.sum;
+          // console.log("toBePaid: ",toBePaid)
+          if (remainedAmount > 0 && toBePaid > 0) {
+            processingAmount = (toBePaid < remainedAmount) ? toBePaid : remainedAmount;
+            await addInstallment ({
+              PaymentId: payment.id,
+              LoanId: instRecord.loanId,
+              amount: processingAmount
+            });
+            remainedAmount = parseFloat(remainedAmount) - parseFloat(processingAmount);
+            payment.addedRecords.push({
+              table: "Installments",
+              amount: parseFloat(processingAmount)
+            });
+            // console.log("payment2: ", payment)
           }
         }
-        console.log("userData : ", userData)
-
-        // assign payment pased on userDate:
-        //
-
+        // (3) if extra
+        // (3-1) add aditional membershipFee
+        console.log("extra remained!! / remainedAmount: ", remainedAmount)
+        while (remainedAmount > 0) {
+          processingAmount = (userData.memFeeToBePaid.lastMemFee < remainedAmount) ?
+          userData.memFeeToBePaid.lastMemFee : remainedAmount;
+          await addMemFeePayment({
+            PaymentId: payment.id,
+            amount: processingAmount
+          })
+          remainedAmount = parseFloat(remainedAmount) - parseFloat(processingAmount);
+          payment.addedRecords.push({
+            table: "membershipPayments",
+            amount: parseFloat(processingAmount)
+          }); 
+          console.log("membershipPayments added : ", processingAmount)
+          for (let instIndex = 0; instIndex < userData.numberOfActiveLoans; instIndex++) {
+            console.log("remainedAmount: ", remainedAmount) 
+            if (remainedAmount > 0) { 
+              let instRecord = userData.installments[instIndex];
+              processingAmount = (instRecord.installmentAmount < remainedAmount) ?
+              instRecord.installmentAmount : remainedAmount;
+              await addInstallment ({
+                PaymentId: payment.id,
+                LoanId: instRecord.loanId,
+                amount: processingAmount
+              });
+              remainedAmount = parseFloat(remainedAmount) - parseFloat(processingAmount);
+              payment.addedRecords.push({
+                table: "Installments",
+                amount: parseFloat(processingAmount)
+              });
+              console.log("installment added : ", processingAmount)
+            }
+          }
+        }
+        console.log("outside while loop")
+        if (remainedAmount == 0) {
+            await updatePayment(payment.id, confirmedBy);
+            payment.message = "Payment successfully assigned and confirmed!";
+          } else {
+            payment.message = "Something went wrong!";
+          }
+         
       }
+      
+      response[index] = payment;
+      
     }
-
     await res.status(200).json({
       success: true,
-      value: userData
-    })
+      value: response
+    })  
   } catch(err) {
     res.status(400).json({
       success: false,
