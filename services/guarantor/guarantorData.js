@@ -1,0 +1,31 @@
+const Guarantor = require("../../models/guarantor");
+const findLoansById = require("../loan/findLoansById");
+
+const guarantorData = async (guarantorId) => {
+  try {
+    const foundRecords = await Guarantor.findAll({
+    where: {
+      UserId: guarantorId
+    }
+  })
+  if (foundRecords.length > 0) {
+    let records = foundRecords.map(row => row.dataValues);
+    for (let index = 0; index < records.length; index++) {
+      let foundLoan = await findLoansById(records[index].LoanId);
+      records[index] = {
+        ...records[index],
+        userId: foundLoan.UserId,
+        amount: foundLoan.loanAmount,
+        lastInstallmentDate: foundLoan.lastInstallmentDate
+      };
+    }
+    return records
+  } else {
+    return []
+  } 
+  } catch (err) {
+    console.log('error is: ', err)
+  }
+};
+
+module.exports = guarantorData;

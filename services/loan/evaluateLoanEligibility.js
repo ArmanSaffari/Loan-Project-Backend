@@ -23,10 +23,11 @@ const evaluateLoaneligibility = async (data) => {
   } else {
     // (3):
     // check eligibility for normal loan
+    // console.log("userData: ", userData)
     if (userData.numberOfLoans.active.normal == 0 && userData.numberOfLoans.requested.normal == 0) {
       evaluation.normal.eligibility = true;
       // eligible for three times the amount of membership fee has been paid so far with the maximum of 10,000
-      evaluation.normal.amount = Math.maz(10000, 3 * userData.memFee.sum);
+      evaluation.normal.amount = Math.min(10000, 3 * userData.memFee.sum);
       evaluation.message = `you are eligible for a normal loan up to ${evaluation.normal.amount}. `
     } else {
       evaluation.message = 'you are not eligible for a normal loan since you already have active normal loan. '

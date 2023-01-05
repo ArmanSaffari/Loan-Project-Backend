@@ -8,7 +8,7 @@ const findLoansById = async (loanId) => {
         id: loanId
       }
     });
-    return foundLoan.dataValues
+    return (foundLoan)? foundLoan.dataValues : null 
   } catch (err) {
     console.log('error is: ', err)
   }

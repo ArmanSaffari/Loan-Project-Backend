@@ -5,6 +5,8 @@ const evaluateLoanEligiblity = require("../services/loan/evaluateLoanEligibility
 const addLoan = require("../services/loan/addLoan");
 const findLoanByStatus = require("../services/loan/findLoansByStatus");
 const findLoanById = require("../services/loan/findLoansById");
+const checkGarantor = require("../services/guarantor/allowableGuarantee");
+
 const loanEligiblity = async (req, res) => {
   // evaluate loan eligibility:
   try {
@@ -41,7 +43,9 @@ const addLoanRequest = async (req, res) => {
         UserId: req.userId,
         loanAmount: loanAmount,
         loanType: loanType,
-        loanStatus: "requested"
+        loanStatus: "requested",
+        installmentNo: (req.body.installmentNo) ? req.body.installmentNo : null,
+        installmentAmount: (req.body.installmentNo) ? (loanAmount / req.body.installmentNo).toFixed(2) : null
       });
     } else if (loanType == "urgent" && evaluation.urgent.eligibility === true) {
       loanAmount = Math.min(req.body.loanAmount , evaluation.urgent.amount);
@@ -49,14 +53,16 @@ const addLoanRequest = async (req, res) => {
         UserId: req.userId,
         loanAmount: loanAmount,
         loanType: loanType,
-        loanStatus: "requested"
+        loanStatus: "requested",
+        installmentNo: (req.body.installmentNo) ? req.body.installmentNo : null,
+        installmentAmount: (req.body.installmentNo) ? (loanAmount / req.body.installmentNo).toFixed(2) : null
       });
     } else {
       throw error
     }
     res.status(200).json({
       success: true,
-      message: `${loanType} lao with the amount of ${loanAmount} has been requested!`
+      message: `${loanType} laon with the amount of ${loanAmount} has been requested!`
     });
   } catch(err) {
     res.status(400).json({
@@ -114,39 +120,9 @@ const findWaitingLoans = async (req, res) => {
   }
 }
 
-const declareGarantor = async (req, res) => {
-  const error = { message: "The loan id is not valid" }
-  try {
-    const foundLoan = await findLoanById(req.body.loanId);
-    console.log(foundLoan)
-    if (foundLoan) {
-      console.log("here!")
-      for (garantor of req.body.garantorId) {
-        //checkGarantor
-        //if ok => addGarantor
-        //if no => return false massege
-        // console.log("id: ", garantor) 
-      }
-      res.status(200).json({
-        sucess: true,
-        message: `${foundLoans.length} waitlisted loan(s) found!`,
-        value: foundLoans
-      });
-    } else {
-      throw error
-    }
-  } catch (err) {
-    res.status(400).json({
-      success: false,
-      err
-    });
-  }
-}
-
 router.get("/eligibility", tokenCheck, loanEligiblity);
 router.post("/request", tokenCheck, addLoanRequest);
 router.get("/requestedLoans", tokenCheck, adminCheck, findRequestedLoans);
 router.get("/waitlistedLoans", tokenCheck, adminCheck, findWaitingLoans);
-router.post("/declareGarantor", tokenCheck, declareGarantor);
 
 module.exports = router;

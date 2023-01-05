@@ -38,6 +38,9 @@ const Loan = sequelize.define(
 		installmentAmount: {
 			type: DataTypes.DECIMAL
 		},
+		lastInstallmentDate: {
+			type: DataTypes.DATEONLY
+		},
 		chequeNo: {
 			type: DataTypes.STRING
 		},

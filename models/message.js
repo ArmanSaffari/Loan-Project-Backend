@@ -1,8 +1,9 @@
 const sequelize = require("../configs/db");
 const { DataTypes } = require("sequelize");
+const User = require("../models/user");
 
 const Message = sequelize.define(
-  "message",
+  "Message",
   {
     id: {
       type: DataTypes.INTEGER,
@@ -27,3 +28,9 @@ const Message = sequelize.define(
   },
   { paranoid: true }
 );
+
+// define relationships
+User.hasMany(Message);
+Message.belongsTo(User);
+
+module.exports = Message;

@@ -11,9 +11,15 @@ const Account = sequelize.define(
 		},
 		accountName:{
 			type: DataTypes.STRING,
-			allowNull: false
+			allowNull: false,
+			unique: true
 		},
-		BankName: {
+		bankName: {
+			type: DataTypes.STRING,
+			allowNull: false,
+			unique: true
+		},
+		accountNumber: {
 			type: DataTypes.STRING,
 			allowNull: false
 		},
