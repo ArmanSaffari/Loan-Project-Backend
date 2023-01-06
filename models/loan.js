@@ -36,7 +36,7 @@ const Loan = sequelize.define(
 			type: DataTypes.INTEGER
 		},
 		installmentAmount: {
-			type: DataTypes.DECIMAL
+			type: DataTypes.DECIMAL(15,2)
 		},
 		lastInstallmentDate: {
 			type: DataTypes.DATEONLY

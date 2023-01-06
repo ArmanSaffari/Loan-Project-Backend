@@ -1,9 +1,14 @@
 const Guarantor = require("../../models/guarantor");
+const Loan = require("../../models/loan");
 const findLoansById = require("../loan/findLoansById");
 
 const guarantorData = async (guarantorId) => {
   try {
     const foundRecords = await Guarantor.findAll({
+    include:[{
+      model: Loan,
+      attributes: ["id","loanStatus"]
+    }],
     where: {
       UserId: guarantorId
     }

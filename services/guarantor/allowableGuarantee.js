@@ -9,7 +9,7 @@ const allowableGuarantee = async (guarantorId) => {
     if (empStatus) {
       const guarantorRecords = await guarantorData(guarantorId);
       const confirmedRecords = guarantorRecords.filter(
-        row => row.adminConfirmation
+        row => row.adminConfirmation && ["requested","waitlisted","active"].includes(row.Loan.loanStatus)
       )
       const countOfGuarantedLoans = guarantorRecords.length;
       const sumOfGuarantedLoans = guarantorRecords.reduce(
