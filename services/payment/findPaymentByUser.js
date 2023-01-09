@@ -3,7 +3,7 @@ const Payment = require("../../models/payment");
 const findPaymentByUser = async (userId) => {
   try {
     const foundPayments = await Payment.findAll({
-      attributes: ['id'],
+      // attributes: ['id'],
       where: {
         Userid: userId
       }

@@ -9,6 +9,7 @@ const findMemFeePayments = async (userId) => {
       attributes: ['id', 'amount'],
       include: {
         model: Payment,
+        attributes: ["paymentDate", "referenceNo", "confirmation", "attachmentAddress"],
         where: {
           UserId: userId
         }

@@ -5,6 +5,7 @@ const addMemFee = require("../services/memFee/addMemFee");
 const waitingMemFee = require("../services/memFee/waitingMemFee");
 const adminCheck = require("../middlewares/adminCheck");
 const updateMemFee = require("../services/memFee/updateMemFee");
+const findMemFeePayments = require("../services/memFeePayment/findMemFeePayments");
 
 const getLastMemFee = async (req, res) => {
   const error = { message: "Monthly Membership Fee has not been set yet!" }
@@ -91,7 +92,7 @@ const confirmMemFee = async (req, res) => {
     const memFeeRecords = req.body.membershipFeeIdList;
     const confirmedBy = req.userId;
     await memFeeRecords.map (id => updateMemFee(id, confirmedBy));
-    await res.status(200).json({
+    res.status(200).json({
       success: true,
       message: "done!"
     })
@@ -101,12 +102,29 @@ const confirmMemFee = async (req, res) => {
       err
     });
   }
-}
+};
+
+const findMyMemFeePayment = async (req, res) => {
+  try {
+    const foundMemFeePayments = await findMemFeePayments(req.userId);
+    res.status(200).json({
+      success: true,
+      value: foundMemFeePayments
+    })
+  } catch(err) {
+    res.status(400).json({
+      success: false,
+      err
+    });
+  }
+};
 
 router.post("/", tokenCheck, setMemFee);
 router.get("/", tokenCheck, getLastMemFee);
 router.get("/list", tokenCheck, getMemFeeList);
 router.get("/waiting", tokenCheck, adminCheck, getWaitingMemFee);
 router.put("/waiting", tokenCheck, adminCheck, confirmMemFee);
+router.put("/waiting", tokenCheck, adminCheck, confirmMemFee);
+router.get("/myPaidMemFee", tokenCheck, findMyMemFeePayment);
 
 module.exports = router;

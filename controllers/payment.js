@@ -1,14 +1,15 @@
 const router = require("express").Router();
 const tokenCheck = require("../middlewares/tokenCheck");
 const adminCheck = require("../middlewares/adminCheck");
+const findPaymentByUser = require("../services/payment/findPaymentByUser")
 const addPaymentService = require("../services/payment/addPayment");
 const waitingPayment = require("../services/payment/waitingPayment");
 const updatePayment = require("../services/payment/updatePayment");
 const findPayment = require("../services/payment/findPayment");
-const findInstallmentsSummary = require("../services/installment/findInstallmentsSummary");
-const sumOfMemFee = require("../services/memFeePayment/sumOfMemFee");
-const memFeeToBePaid = require("../services/memFeePayment/memFeeToBePaid");
-const findLoansByUser = require("../services/loan/findLoansByUser");
+// const findInstallmentsSummary = require("../services/installment/findInstallmentsSummary");
+// const sumOfMemFee = require("../services/memFeePayment/sumOfMemFee");
+// const memFeeToBePaid = require("../services/memFeePayment/memFeeToBePaid");
+// const findLoansByUser = require("../services/loan/findLoansByUser");
 const addMemFeePayment = require("../services/memFeePayment/addMemFeePayment");
 const addInstallment = require("../services/installment/addInstallment")
 const getPaymentData = require("../services/payment/getPaymentData");
@@ -23,6 +24,23 @@ const addPayment = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "new payment added!"
+    })
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      err
+    })
+  }
+};
+
+const findMyPayments = async (req, res) => {
+  try {
+    const foundPayments = await findPaymentByUser(req.userId);
+    res.status(200).json({
+      success: true,
+      message: (foundPayments.length) ? 
+        `${foundPayments.length} payment(s) found.` : "There is not any payment for given user id",
+      value: foundPayments
     })
   } catch (err) {
     res.status(400).json({
@@ -54,23 +72,23 @@ const getWaitingPayment = async (req, res) => {
 };
 
 
-const confirmPayment = async (req, res) => {
-  try {
-    const paymentRecords = req.body.paymentList.map(row => row.id);
-    const confirmedBy = req.userId;
+// const confirmPayment = async (req, res) => {
+//   try {
+//     const paymentRecords = req.body.paymentList.map(row => row.id);
+//     const confirmedBy = req.userId;
 
-    await paymentRecords.map(id => updatePayment(id, confirmedBy));
-    res.status(200).json({
-      success: true,
-      message: "done!"
-    });
-  } catch(err) {
-    res.status(400).json({
-      success: false,
-      err
-    });
-  }
-};
+//     await paymentRecords.map(id => updatePayment(id, confirmedBy));
+//     res.status(200).json({
+//       success: true,
+//       message: "done!"
+//     });
+//   } catch(err) {
+//     res.status(400).json({
+//       success: false,
+//       err
+//     });
+//   }
+// };
 
 const paymentAssignment = async (req, res) => {
   const confirmedBy = req.userId;
@@ -180,9 +198,7 @@ const paymentAssignment = async (req, res) => {
           } else {
             payment.message = "Something went wrong!";
           }
-         
       }
-      
       response[index] = payment;
       
     }
@@ -201,7 +217,8 @@ const paymentAssignment = async (req, res) => {
 
 router.post("/add", tokenCheck, addPayment);
 router.get("/waiting", tokenCheck, adminCheck, getWaitingPayment);
-router.put("/waiting", tokenCheck, adminCheck, confirmPayment);
+// router.put("/waiting", tokenCheck, adminCheck, confirmPayment);
 router.post("/paymentAssignment", tokenCheck, adminCheck, paymentAssignment);
+router.get("/myPayments", tokenCheck, findMyPayments);
 
 module.exports = router;

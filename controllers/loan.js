@@ -5,12 +5,51 @@ const evaluateLoanEligiblity = require("../services/loan/evaluateLoanEligibility
 const addLoan = require("../services/loan/addLoan");
 const findLoanByStatus = require("../services/loan/findLoansByStatus");
 const findLoanById = require("../services/loan/findLoansById");
-const allowableGuarantee = require("../services/guarantor/allowableGuarantee");
-const findEmploymentStatus = require("../services/user/findEmploymentStatus");
+const findLoanByUser = require("../services/loan/findLoansByUser")
+// const allowableGuarantee = require("../services/guarantor/allowableGuarantee");
+// const findEmploymentStatus = require("../services/user/findEmploymentStatus");
 const updateLoan = require("../services/loan/updateLoan");
 const addCostIncome = require("../services/costIncome/addCostIncome");
 const findInstallmentsSummary = require("../services/installment/findInstallmentsSummary");
-const { AsyncQueueError } = require("sequelize");
+const findInstallmentsByUser = require("../services/installment/findInstallmentsByUser");
+
+const findMyLoans = async (req, res) => {
+  // return all loans belongs to the requested user:
+  try {
+    let foundLoans = await findLoanByUser(req.userId);
+    for (let index = 0; index < foundLoans.length; index++) {
+      let summary = await findInstallmentsSummary(foundLoans[index].id);
+      foundLoans[index].installmentSumary = summary[0];
+    }
+    res.status(200).json({
+      sucess: true,
+      message: (foundLoans.length) ? 
+        `${foundLoans.length} loan(s) found.` : "There is not any loan for given user id",
+      value: foundLoans
+      })
+
+  } catch(err) {
+    res.status(400).json({
+      success: false,
+      err
+    })
+  }
+};
+
+const findMyInstallments = async (req, res) => {
+  try {
+    const foundInstallments = await findInstallmentsByUser(req.userId);
+    res.status(200).json({
+      success: true,
+      value: foundInstallments
+    })
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      err
+    })
+  }
+};
 
 const loanEligiblity = async (req, res) => {
   // evaluate loan eligibility:
@@ -260,6 +299,8 @@ const terminateLoan = async (req, res) => {
   }
 }
 
+router.get("/myLoans", tokenCheck, findMyLoans);
+router.get("/myInstallments", tokenCheck, findMyInstallments)
 router.get("/eligibility", tokenCheck, loanEligiblity);
 router.post("/request", tokenCheck, addLoanRequest);
 router.get("/requestedLoans", tokenCheck, adminCheck, findRequestedLoans);

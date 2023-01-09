@@ -9,7 +9,7 @@ const findGuarantorRequestByUserId = async (userId) => {
       attributes: ["id", "loanAmount", "installmentNo", "installmentAmount"]
     },{
       model: User,
-      attributes: ["id", "firstName", "lastName","phoneNumber"]
+      attributes: ["id", "firstName", "lastName", "phoneNumber"]
     }],
     attributes: [["id", "recordId"], "guarantorConfirmation"],
     where: {
