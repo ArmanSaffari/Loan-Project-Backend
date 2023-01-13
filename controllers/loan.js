@@ -6,12 +6,12 @@ const addLoan = require("../services/loan/addLoan");
 const findLoanByStatus = require("../services/loan/findLoansByStatus");
 const findLoanById = require("../services/loan/findLoansById");
 const findLoanByUser = require("../services/loan/findLoansByUser")
-// const allowableGuarantee = require("../services/guarantor/allowableGuarantee");
-// const findEmploymentStatus = require("../services/user/findEmploymentStatus");
 const updateLoan = require("../services/loan/updateLoan");
 const addCostIncome = require("../services/costIncome/addCostIncome");
 const findInstallmentsSummary = require("../services/installment/findInstallmentsSummary");
 const findInstallmentsByUser = require("../services/installment/findInstallmentsByUser");
+const findInstallmentsByLoan = require("../services/installment/findInstallmentsByLoan");
+const getPaymentData = require("../services/payment/getPaymentData");
 
 const findMyLoans = async (req, res) => {
   // return all loans belongs to the requested user:
@@ -38,16 +38,36 @@ const findMyLoans = async (req, res) => {
 
 const findMyInstallments = async (req, res) => {
   try {
-    const foundInstallments = await findInstallmentsByUser(req.userId);
+    const foundInstallments = await findInstallmentsByLoan(req.body.loanId);
+    // console.log(foundInstallments)
     res.status(200).json({
       success: true,
-      value: foundInstallments
+      value: (foundInstallments.UserId == req.userId) ?
+        foundInstallments : []
     })
   } catch (err) {
     res.status(400).json({
       success: false,
       err
     })
+  }
+};
+
+const getUserSummary = async (req, res) => {
+  try{
+    let userData = await getPaymentData({
+    userId: req.userId,
+    membershipDate: req.userData.membershipDate
+  });
+  res.status(200).json({
+    success: true,
+    value: userData
+  })
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      err
+    });
   }
 };
 
@@ -71,7 +91,7 @@ const loanEligiblity = async (req, res) => {
 };
 
 const addLoanRequest = async (req, res) => {
-  const error = { massage: "you are not eligible for neither normal nor urgent loan!"}
+  const error = { massage: `you are not eligible for ${req.body.loanType} loan!`}
   let loanAmount = 0;
   try {
     const evaluation = await evaluateLoanEligiblity({
@@ -103,7 +123,33 @@ const addLoanRequest = async (req, res) => {
       err
     });
   }
-}
+};
+
+const cancelLoanRequest = async (req, res) => {
+  const error = { massage: "Given loan id does not exist or is not in requested status!"}
+  try {
+    // (1) check given data
+    const foundLoan = await findLoanById(req.body.loanId);
+    if (foundLoan && foundLoan.loanStatus == "requested") {
+      // (2) change loanStatus to "rejected"
+      const result = await updateLoan({
+        loanId: req.body.loanId,
+        loanStatus: "canceled"
+      });
+      res.status(200).json({
+        sucess: true,
+        ...result,
+      });
+    } else {
+      throw error
+    }
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      err
+    });
+  }
+};
 
 const findRequestedLoans = async (req, res) => {
   try {
@@ -127,7 +173,7 @@ const findRequestedLoans = async (req, res) => {
       err
     });
   }
-}
+};
 
 const findWaitingLoans = async (req, res) => {
   try {
@@ -151,7 +197,7 @@ const findWaitingLoans = async (req, res) => {
       err
     });
   }
-}
+};
 
 const confirmLoan = async (req, res) => {
   const error = { massage: "Given loan id does not exist or is not in requested status!"}
@@ -189,7 +235,34 @@ const confirmLoan = async (req, res) => {
       err
     });
   }
-}
+};
+
+const changeLoanDate = async (req, res) => {
+  const error = { massage: "Given loan id does not exist or is not in requested status!"}
+  try {
+    // (1) check given data
+    const foundLoan = await findLoanById(req.body.loanId);
+    if (foundLoan) {
+      // (2) change loan Payment Date
+      const result = await updateLoan({
+        loanId: req.body.loanId,
+        loanPaymentDate: req.body.loanPaymentDate,
+        comment: req.body.comment
+      });
+      res.status(200).json({
+        sucess: true,
+        ...result,
+      });
+    } else {
+      throw error
+    }
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      err
+    });
+  }
+};
 
 const activateLoan = async (req, res) => {
   const error = { massage: "Given loan id does not exist or is not in waitlisted status!"}
@@ -231,7 +304,7 @@ const activateLoan = async (req, res) => {
       err
     });
   }
-}
+};
 
 const rejectLoan = async (req, res) => {
   const error = { massage: "Given loan id does not exist or is not in requested status!"}
@@ -259,7 +332,7 @@ const rejectLoan = async (req, res) => {
       err
     });
   }
-}
+};
 
 const terminateLoan = async (req, res) => {
   const error = { massage: "Given loan id does not exist or is not in active status!"}
@@ -297,14 +370,17 @@ const terminateLoan = async (req, res) => {
       err
     });
   }
-}
+};
 
 router.get("/myLoans", tokenCheck, findMyLoans);
-router.get("/myInstallments", tokenCheck, findMyInstallments)
+router.get("/myInstallments", tokenCheck, findMyInstallments);
+router.get("/userSummary", tokenCheck, getUserSummary)
 router.get("/eligibility", tokenCheck, loanEligiblity);
 router.post("/request", tokenCheck, addLoanRequest);
+router.post("/cancelRequest", tokenCheck, cancelLoanRequest);
 router.get("/requestedLoans", tokenCheck, adminCheck, findRequestedLoans);
 router.put("/confirm", tokenCheck, adminCheck, confirmLoan);
+router.put("/changeDate", tokenCheck, adminCheck, changeLoanDate);
 router.get("/waitlistedLoans", tokenCheck, adminCheck, findWaitingLoans);
 router.put("/activate", tokenCheck, adminCheck, activateLoan);
 router.put("/reject", tokenCheck, adminCheck, rejectLoan);

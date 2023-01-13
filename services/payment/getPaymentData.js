@@ -24,7 +24,7 @@ const getPaymentData = async (data) => {
       requested: {normal: 0, urgent: 0}
     }, 
     installments: [],
-    dataGateringDate: currentDate
+    dataGatheringDate: currentDate
   }
   extractedData.memFeeRemained =
     extractedData.memFeeToBePaid.value - extractedData.memFee.sum;

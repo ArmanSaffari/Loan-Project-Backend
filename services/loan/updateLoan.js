@@ -18,7 +18,11 @@ const updateLoan = async (data) => {
       
     await foundLoan.update(updateData)
 
-    return { message: `Loan id of ${loanId} has been updated to '${data.loanStatus}' for payment on ${foundLoan.loanPaymentDate}`}
+    return { message: 
+      `Loan id of ${loanId} has been updated to ${(data.loanStatus) ? data.loanStatus : foundLoan.loanStatus }${(foundLoan.loanPaymentDate) ? 
+      (" for payment on " + foundLoan.loanPaymentDate) : "."}`
+    }
+    
   } catch (err) {
     console.log('error is: ', err)
     return err

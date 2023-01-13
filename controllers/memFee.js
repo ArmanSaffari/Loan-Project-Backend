@@ -6,16 +6,20 @@ const waitingMemFee = require("../services/memFee/waitingMemFee");
 const adminCheck = require("../middlewares/adminCheck");
 const updateMemFee = require("../services/memFee/updateMemFee");
 const findMemFeePayments = require("../services/memFeePayment/findMemFeePayments");
+const findMemFeeById = require("../services/memFee/findMemFeeById")
+const deleteMemFee = require("../services/memFee/deleteMemFee");
 
 const getLastMemFee = async (req, res) => {
   const error = { message: "Monthly Membership Fee has not been set yet!" }
   try {
     const memFeeList = await findMemFee(req.userId);
-    if (!memFeeList) throw error
+    const confirmedMemFeeList = await memFeeList.filter(row => row.confirmation == true)
+    if (!confirmedMemFeeList) throw error
     res.status(200).json({
       success: true,
-      monthlyMembershipFee: memFeeList[0].monthlyMembershipFee
-    })
+      monthlyMembershipFee: confirmedMemFeeList[0].monthlyMembershipFee,
+      effectiveFrom: confirmedMemFeeList[0].effectiveFrom
+    });
   } catch(err) {
     res.status(400).json({
       success: false,
@@ -45,7 +49,7 @@ const setMemFee = async (req, res) => {
       throw error
     }
   } catch(err) {
-    res.status(400).json({
+    res.status(406).json({
       success: false,
       err
     });
@@ -119,8 +123,38 @@ const findMyMemFeePayment = async (req, res) => {
   }
 };
 
+const removeMemFee = async (req, res) => {
+  const error = { message: "provided data is not correct!" }
+  const confirmedError = { message: "Confirmed records can not be deleted by user!" }
+  try {
+    console.log("req.body: ", req.body)
+    const memFeeId = parseInt(req.body.memFeeId);
+    console.log("memFeeId: ", memFeeId)
+    const foundMemFee = await findMemFeeById(memFeeId);
+
+    if (!foundMemFee || foundMemFee.UserId != req.userId) {
+      throw error
+    } else if (foundMemFee.confirmation) {
+      throw confirmedError
+    } else {
+      const result = await deleteMemFee(memFeeId);
+      console.log("result: ", result)
+      res.status(200).json({
+        success: true,
+        message: result
+      })
+    }
+  } catch(err) {
+    res.status(400).json({
+      success: false,
+      err
+    });
+  }
+};
+
 router.post("/", tokenCheck, setMemFee);
 router.get("/", tokenCheck, getLastMemFee);
+router.delete("/", tokenCheck, removeMemFee);
 router.get("/list", tokenCheck, getMemFeeList);
 router.get("/waiting", tokenCheck, adminCheck, getWaitingMemFee);
 router.put("/waiting", tokenCheck, adminCheck, confirmMemFee);

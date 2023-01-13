@@ -25,7 +25,7 @@ const Loan = sequelize.define(
 			type: DataTypes.DATEONLY,
 		},
 		loanStatus: { //requested / active / terminated
-			type: DataTypes.ENUM('requested', 'waitlisted', 'rejected', 'active', 'terminated'),
+			type: DataTypes.ENUM('requested', 'canceled', 'waitlisted', 'rejected', 'active', 'terminated'),
 			allowNull: false,
 			defaultValue: "requested"
 		},
