@@ -1,6 +1,9 @@
 const findMemFee = require("../memFee/findMemFee");
 
 const memFeeToBePaid = async (givenDate, userId) => {
+  /*this function returns data of membership fee and related payments for a specified userId
+  data will be only before the givenDate provided as argument
+  */
   const memFeeList = await findMemFee(userId);
   let memFeeBeforeGivenDate = memFeeList.filter(
     (memFee) => new Date(memFee.effectiveFrom) <= givenDate
@@ -31,7 +34,9 @@ const memFeeToBePaid = async (givenDate, userId) => {
     return {
       message: "",
       value: toBePaid,
-      lastMemFee: lastMemFee
+      lastMemFee: lastMemFee,
+      lastMemFeeEffectiveFrom: memFeeBeforeGivenDate[0].effectiveFrom
+
     }  
   }
 }

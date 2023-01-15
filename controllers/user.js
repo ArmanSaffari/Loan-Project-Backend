@@ -6,6 +6,7 @@ const checkUniqueValues = require("../services/user/checkUnique");
 const checkUser = require("../services/user/signin");
 const tokenCheck = require("../middlewares/tokenCheck");
 const uploadPhoto = require("../middlewares/uploadPhoto");
+const getPaymentData = require("../services/payment/getPaymentData");
 
 const bcrypt = require("bcrypt");
 const fs = require('fs');
@@ -87,6 +88,24 @@ const signin = async (req, res) => {
   }
 };
 
+const getUserSummary = async (req, res) => {
+  try{
+    let userData = await getPaymentData({
+    userId: req.userId,
+    membershipDate: req.userData.membershipDate
+  });
+  res.status(200).json({
+    success: true,
+    value: userData
+  })
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      err
+    });
+  }
+};
+
 // using Multer
 const multer = require('multer');
 const path = require('path');
@@ -110,5 +129,7 @@ router.post("/registerWithPhoto", uploadMemory.single('userPhoto'), registerWith
 router.post("/signin", signin);
 router.get("/tokenCheck", tokenCheck, (req, res) => {res.status(200).json({ success: true })});
 router.post("/uploadPhoto", upload.single('userPhoto'), uploadPhoto)
+
+router.get("/summary", tokenCheck, getUserSummary)
 
 module.exports = router;

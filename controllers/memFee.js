@@ -128,7 +128,7 @@ const removeMemFee = async (req, res) => {
   const confirmedError = { message: "Confirmed records can not be deleted by user!" }
   try {
     console.log("req.body: ", req.body)
-    const memFeeId = parseInt(req.body.memFeeId);
+    const memFeeId = parseInt(req.body.recordId);
     console.log("memFeeId: ", memFeeId)
     const foundMemFee = await findMemFeeById(memFeeId);
 

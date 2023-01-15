@@ -69,11 +69,11 @@ const getPaymentData = async (data) => {
           loanPaymentDate: loanPaymentDate,
           installmentAmount: activeLoans[loanIndex].installmentAmount,
           installmentToBePaid: installmentToBePaid,
-          installmentAmountToBePaid: installmentToBePaid * activeLoans[loanIndex].installmentAmount,
+          installmentAmountToBePaid: parseFloat((installmentToBePaid * activeLoans[loanIndex].installmentAmount).toFixed(2)),
           ...installmentData[0]
         };
-        extractedData.installmentRemained = extractedData.installmentRemained + 
-        extractedData.installments[loanIndex].installmentAmountToBePaid
+        extractedData.installmentRemained = parseFloat(extractedData.installmentRemained) + 
+        parseFloat(extractedData.installments[loanIndex].installmentAmountToBePaid)
         - installmentData[0].sum;
       }
     }

@@ -13,11 +13,11 @@ const Guarantor = sequelize.define (
     },
     guarantorConfirmation: {
       type: DataTypes.BOOLEAN,
-      defaultValue: false
+      defaultValue: null
     },
     adminConfirmation: {
       type: DataTypes.BOOLEAN,
-      defaultValue: false
+      defaultValue: null
     },
     adminId: {
       type: DataTypes.INTEGER

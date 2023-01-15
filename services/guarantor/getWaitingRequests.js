@@ -13,7 +13,8 @@ const getWaitingRequests = async () => {
     }],
     attributes: [["id", "recordId"], "guarantorConfirmation", "adminConfirmation", "adminId"],
     where: {
-      adminConfirmation: false
+      guarantorConfirmation: true,
+      adminConfirmation: null
     }
   });
   return foundRecords.map(row => row.dataValues);

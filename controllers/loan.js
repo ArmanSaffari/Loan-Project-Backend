@@ -53,24 +53,6 @@ const findMyInstallments = async (req, res) => {
   }
 };
 
-const getUserSummary = async (req, res) => {
-  try{
-    let userData = await getPaymentData({
-    userId: req.userId,
-    membershipDate: req.userData.membershipDate
-  });
-  res.status(200).json({
-    success: true,
-    value: userData
-  })
-  } catch (error) {
-    res.status(400).json({
-      success: false,
-      err
-    });
-  }
-};
-
 const loanEligiblity = async (req, res) => {
   // evaluate loan eligibility:
   try {
@@ -374,7 +356,6 @@ const terminateLoan = async (req, res) => {
 
 router.get("/myLoans", tokenCheck, findMyLoans);
 router.get("/myInstallments", tokenCheck, findMyInstallments);
-router.get("/userSummary", tokenCheck, getUserSummary)
 router.get("/eligibility", tokenCheck, loanEligiblity);
 router.post("/request", tokenCheck, addLoanRequest);
 router.post("/cancelRequest", tokenCheck, cancelLoanRequest);

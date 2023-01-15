@@ -42,9 +42,9 @@ const declareGuarantor = async (req, res) => {
       err
     });
   }
-}
+};
 
-const getWaitingGaurantorRequest = async (req, res) => {
+const getGaurantorRequest = async (req, res) => {
   // user will receive list of guarantee requests for him/her
   try {
     const foundRecords = await findGuarantorRequestByUserId(req.userId)
@@ -58,13 +58,19 @@ const getWaitingGaurantorRequest = async (req, res) => {
       err
     });
   }
-}
+};
 
 const guarantorConfirmation = async (req, res) => {
   let message = [];
   try {
-    for (recordId of req.body.recordId) {
-      message.push( await confirmByGaurantor(req.userId, recordId) );
+    for (record of req.body.records) {
+      message.push(
+        await confirmByGaurantor({
+          userId: req.userId,
+          recordId: record.loanId,
+          isConfirmed: record.isConfirmed
+        })
+      );
     }
     res.status(200).json({
       success: true,
@@ -76,7 +82,7 @@ const guarantorConfirmation = async (req, res) => {
       err
     });
   }
-}
+};
 
 const getWaitingAdminConfirmation = async (req, res) => {
   try {
@@ -114,7 +120,7 @@ const adminConfirmation = async (req, res) => {
 
 router.post("/declareGuarantor", tokenCheck, declareGuarantor);
 router.put("/guarantorConfirmation", tokenCheck, guarantorConfirmation);
-router.get("/waitingGurantorRequest", tokenCheck, getWaitingGaurantorRequest)
+router.get("/gurantorRequest", tokenCheck, getGaurantorRequest)
 router.get("/waitingAdminConfirmation", tokenCheck, adminCheck, getWaitingAdminConfirmation)
 router.put("/adminConfirmation", tokenCheck, adminCheck, adminConfirmation)
 
