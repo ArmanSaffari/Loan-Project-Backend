@@ -4,6 +4,7 @@ const adminCheck = require("../middlewares/adminCheck");
 const addAccount = require("../services/account/addAccount");
 const findAccountByName = require("../services/account/findAccountByName");
 const findAccountByNumber = require("../services/account/findAccountByNumber");
+const accountsShownToUser = require("../services/account/accountsShownToUser")
 
 const newAccount = async (req, res) => {
   const nameError = { message: "An account with same name already exist"}
@@ -30,6 +31,27 @@ const newAccount = async (req, res) => {
   }
 };
 
+const getAccountList =  async(req, res) => {
+  try {
+    const foundAccounts = await accountsShownToUser();
+    res.status(200).json({
+      success: true,
+      value: foundAccounts.map(row => {
+        return {
+          value: row.id,
+          label: `${row.bankName} - ${row.accountNumber}`
+        }
+      })
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      error 
+    });
+  }
+};
+
 router.post("/new", tokenCheck, adminCheck, newAccount);
+router.get("/", tokenCheck, getAccountList);
 
 module.exports = router;

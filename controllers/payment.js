@@ -1,7 +1,8 @@
 const router = require("express").Router();
 const tokenCheck = require("../middlewares/tokenCheck");
 const adminCheck = require("../middlewares/adminCheck");
-const findPaymentByUser = require("../services/payment/findPaymentByUser")
+const findPaymentByUser = require("../services/payment/findPaymentByUser");
+const countPaymentsByUser = require("../services/payment/countPaymentsByUser")
 const addPaymentService = require("../services/payment/addPayment");
 const waitingPayment = require("../services/payment/waitingPayment");
 const updatePayment = require("../services/payment/updatePayment");
@@ -35,11 +36,29 @@ const addPayment = async (req, res) => {
 
 const findMyPayments = async (req, res) => {
   try {
-    const foundPayments = await findPaymentByUser(req.userId);
+    const totalCountsOfPayments = await countPaymentsByUser({
+      userId: req.userId,
+      filter: JSON.parse(req.query.filter)
+    });
+
+    const offset = (req.query.page - 1) * req.query.limit;
+
+    const foundPayments = await findPaymentByUser({
+      userId: req.userId,
+      filter: JSON.parse(req.query.filter),
+      order: req.query.order,
+      limit: req.query.limit,
+      offset: offset
+    });
+
     res.status(200).json({
       success: true,
       message: (foundPayments.length) ? 
-        `${foundPayments.length} payment(s) found.` : "There is not any payment for given user id",
+        `${foundPayments.length} payments out of ${totalCountsOfPayments}.` : "Nothing found!",
+      totalCount: totalCountsOfPayments,
+      page: parseInt(req.query.page),
+      start: offset + 1,
+      end: offset + foundPayments.length,
       value: foundPayments
     })
   } catch (err) {

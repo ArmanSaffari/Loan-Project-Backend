@@ -1,13 +1,20 @@
 const Payment = require("../../models/payment");
 
-const findPaymentByUser = async (userId) => {
+const findPaymentByUser = async (data) => {
+
   try {
     const foundPayments = await Payment.findAll({
-      // attributes: ['id'],
       where: {
-        Userid: userId
-      }
+        Userid: data.userId,
+        ...data.filter
+      },
+      order: [
+        [ data.order ,"DESC" ]
+      ],
+      limit: parseInt(data.limit),
+      offset: parseInt(data.offset)
     });
+    
     return foundPayments.map( row => row.dataValues);
   } catch(err) {
     console.log("error is: ", err)

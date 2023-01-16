@@ -3,12 +3,12 @@ const sequelize = require("../../configs/db");
 
 const findAccountByNumber = async (accountNumber) => {
   try {
-    const foundLoan = await Account.findOne({
+    const foundAccount = await Account.findOne({
       where: {
         accountNumber: accountNumber
       }
     });
-    return (foundLoan)? foundLoan.dataValues : null
+    return (foundAccount)? foundAccount.dataValues : null
   } catch (err) {
     console.log('error is: ', err)
   }

@@ -27,6 +27,10 @@ const Account = sequelize.define(
 			type: DataTypes.DECIMAL(15,2),
 			allowNull: false
 		},
+		showToUsers: {
+			type: DataTypes.BOOLEAN,
+			defaultValue: false
+		}
 	},
 	{ paranoid: true }
 );
