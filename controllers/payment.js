@@ -7,13 +7,10 @@ const addPaymentService = require("../services/payment/addPayment");
 const waitingPayment = require("../services/payment/waitingPayment");
 const updatePayment = require("../services/payment/updatePayment");
 const findPayment = require("../services/payment/findPayment");
-// const findInstallmentsSummary = require("../services/installment/findInstallmentsSummary");
-// const sumOfMemFee = require("../services/memFeePayment/sumOfMemFee");
-// const memFeeToBePaid = require("../services/memFeePayment/memFeeToBePaid");
-// const findLoansByUser = require("../services/loan/findLoansByUser");
 const addMemFeePayment = require("../services/memFeePayment/addMemFeePayment");
 const addInstallment = require("../services/installment/addInstallment")
 const getPaymentData = require("../services/payment/getPaymentData");
+const deleteWaitingPayment = require("../services/payment/deleteWaitingPayment")
 
 const addPayment = async (req, res) => {
   try {
@@ -231,13 +228,42 @@ const paymentAssignment = async (req, res) => {
       err
     });
   }
-}
+};
 
+const deletePayment = async (req, res) => {
+  const Error = { message: "Only your own waiting payments can be deleted!"}
+  const notFoundError = { message: "Provided data is not correct!"}
+
+  try{
+    const recordId = parseInt(req.body.recordId);
+    const foundPayment = await findPayment(recordId);
+    if (foundPayment) {
+      if (foundPayment.UserId == req.userId && foundPayment.confirmation == false) {
+        const { message } = await deleteWaitingPayment(recordId);
+        res.status(200).json({
+          success: true,
+          message: message,
+        });
+      } else {
+        throw Error
+      }
+    } else {
+      throw notFoundError
+    } 
+    
+  } catch(err) {
+    res.status(400).json({
+      success: false,
+      err
+    });
+  }
+};
 
 router.post("/add", tokenCheck, addPayment);
 router.get("/waiting", tokenCheck, adminCheck, getWaitingPayment);
 // router.put("/waiting", tokenCheck, adminCheck, confirmPayment);
 router.post("/paymentAssignment", tokenCheck, adminCheck, paymentAssignment);
 router.get("/myPayments", tokenCheck, findMyPayments);
+router.delete("/", tokenCheck, deletePayment);
 
 module.exports = router;

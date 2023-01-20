@@ -13,7 +13,7 @@ const getPaymentData = async (data) => {
   let membershipDate = new Date(data.membershipDate);
 
   extractedData = {
-    userId: data.userId,
+    userId: data.usmemFeeListerId,
     membershipDate: membershipDate,
     memFeeToBePaid: await memFeeToBePaid(currentDate, data.userId),
     memFee: await sumOfMemFee(data.userId),
@@ -30,11 +30,16 @@ const getPaymentData = async (data) => {
     extractedData.memFeeToBePaid.value - extractedData.memFee.sum;
   extractedData.installmentRemained = 0;
   // (2) evaluate loans
+
   let loans = await findLoansByUser(data.userId);
 
   if (loans) {
     let activeLoans = loans.filter(row => row.loanStatus == "active");
     let requestedLoans = loans.filter(row => row.loanStatus == "requested");
+    let waitlistedLoans = loans.filter(row => row.loanStatus == "waitlisted");
+    let rejectedLoans = loans.filter(row => row.loanStatus == "rejected");
+    let terminatedLoans = loans.filter(row => row.loanStatus == "terminated");
+
     extractedData.numberOfLoans = {
       total: {
         normal: loans.filter(row => row.loanType == "normal").length,
@@ -47,7 +52,19 @@ const getPaymentData = async (data) => {
       requested: {
         normal: requestedLoans.filter(row => row.loanType == "normal").length,
         urgent: requestedLoans.filter(row => row.loanType == "urgent").length
-        }
+      },
+      waitlisted: {
+        normal: waitlistedLoans.filter(row => row.loanType == "normal").length,
+        urgent: waitlistedLoans.filter(row => row.loanType == "urgent").length
+      },
+      rejected: {
+        normal: rejectedLoans.filter(row => row.loanType == "normal").length,
+        urgent: rejectedLoans.filter(row => row.loanType == "urgent").length
+      },
+      terminated: {
+        normal: terminatedLoans.filter(row => row.loanType == "normal").length,
+        urgent: terminatedLoans.filter(row => row.loanType == "urgent").length
+      }
     };
 
     if (activeLoans) {
@@ -78,6 +95,7 @@ const getPaymentData = async (data) => {
       }
     }
   }
+
   return extractedData
 };
 

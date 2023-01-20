@@ -8,7 +8,9 @@ const findLoansByUser = async (userId) => {
         UserId: userId
       }
     });
+
     return foundLoans.map(row => row.dataValues)
+      .filter(row => row.loanStatus != "canceled");
   } catch (err) {
     console.log('error is: ', err)
   }

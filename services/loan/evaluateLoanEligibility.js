@@ -12,14 +12,18 @@ const evaluateLoaneligibility = async (data) => {
     urgent: {eligibility: false, amount: 0},
     message: ""
   };
+
   let userData = await getPaymentData({
     userId: data.userId,
     membershipDate: data.membershipDate
   });
+
   // (1) and (2):
   if (userData.memFeeRemained > 0 || userData.installmentRemained > 0) {
     evaluation.message = `You have already due payment. Due membership fee: `+
       `${Math.max(0, userData.memFeeRemained)}; Due installment: ${Math.max(0, userData.installmentRemained)} .`
+  } else if (userData.memFeeToBePaid.lastMemFee == 0) {
+    evaluation.message = `You must at least have a membership fee set on your account. `
   } else {
     // (3):
     // check eligibility for normal loan
