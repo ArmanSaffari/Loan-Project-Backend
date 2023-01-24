@@ -4,38 +4,61 @@ const adminCheck = require("../middlewares/adminCheck")
 const findLoanById = require("../services/loan/findLoansById");
 const allowableGuarantee = require("../services/guarantor/allowableGuarantee");
 const addGuarantor = require("../services/guarantor/addGuarantor");
-const findGuarantorRequestByUserId = require("../services/guarantor/findGuarantorRequestByUserId");
+const findGuarantorRequestByUserId = require("../services/guarantor/findGuaranteesByUser");
 const confirmByGaurantor = require("../services/guarantor/confirmByGaurantor");
 const getWaitingRequests = require("../services/guarantor/getWaitingRequests");
 const confirmByAdmin = require("../services/guarantor/confirmByAdmin");
+const findUser = require("../services/user/findUser");
+const findGuarantorsByLoanId = require("../services/guarantor/findGuarantorsByLoanId");
+const countGuaranteesByUser = require("../services/guarantor/countGuaranteesByUser");
+const findGuaranteesByUser = require("../services/guarantor/findGuaranteesByUser");
 
-const declareGuarantor = async (req, res) => {
-  const error = { message: "The loan id is not valid" };
-  let message = [];
+const newGuarantor = async (req, res) => {
+  const dataError = { message: "Provided data is not valid!" };
+  const loanError = { message: "The loan must be in 'requested' status."}
+  const uniqueError = { message: "The guarantor is already added to this loan!"}
+  let message = "";
+  let success = true;
   try {
+
     const foundLoan = await findLoanById(req.body.loanId);
-    if (foundLoan) {
-      for (let guarantor of req.body.guarantorId) {
-        let allowableGuaranteeAmount = await allowableGuarantee(guarantor);
-        if (allowableGuaranteeAmount === null) {
-          message.push("Provided data is not valid!")
-        } else if (allowableGuaranteeAmount > foundLoan.loanAmount) {
-          addGuarantor({
-            LoanId: req.body.loanId,
-            UserId: guarantor
-          })
-          message.push(`Guarantor with user id of ${guarantor} added to loan number ${req.body.loanId}.`)
-        } else {
-          message.push(`User with id of ${guarantor} is not allowed to be a guarantor at the moment.`)
-        }
-      }
-      res.status(200).json({
-        sucess: true,
-        message: message
-      });
+
+    // check found loan
+    if (!foundLoan) throw dataError;
+    if (req.userId != foundLoan.UserId) throw dataError
+    if (foundLoan.loanStatus != "requested") throw loanError
+    
+    const currentGuarantors = 
+      foundLoan.Guarantors.map(row => row.UserId);
+    const guarantorId = parseInt(req.body.guarantorId);
+    if (currentGuarantors.includes(guarantorId)) throw uniqueError 
+
+    const foundUser = await findUser(guarantorId);
+    if ((foundUser.lastName.toLowerCase()) != req.body.guarantorLastName.toLowerCase()) throw dataError;
+    
+    const allowableGuaranteeAmount = await allowableGuarantee(guarantorId);
+    // console.log("allowableGuaranteeAmount: ", allowableGuaranteeAmount)
+    if (allowableGuaranteeAmount === null) throw dataError
+    
+    if (allowableGuaranteeAmount > foundLoan.loanAmount) {
+      addGuarantor({
+        LoanId: req.body.loanId,
+        UserId: guarantorId
+      })
+      message =  
+        `Mr./ Mrs./ Ms. ${foundUser.lastName} with user id of ${guarantorId} added to loan number ${req.body.loanId}.`
+    
     } else {
-      throw error
-    }
+      message =  
+        `Mr./ Mrs./ Ms. ${foundUser.lastName} with id of ${guarantorId} is not allowed to be a guarantor at the moment.`
+      success = false;
+      }
+
+    res.status(200).json({
+      success: success,
+      message: message
+    });
+
   } catch (err) {
     res.status(400).json({
       success: false,
@@ -47,11 +70,34 @@ const declareGuarantor = async (req, res) => {
 const getGaurantorRequest = async (req, res) => {
   // user will receive list of guarantee requests for him/her
   try {
-    const foundRecords = await findGuarantorRequestByUserId(req.userId)
-    res.status(200).json({
-      sucess: true,
-      foundRecords: foundRecords
+    const totalCountsOfGuarantees = await countGuaranteesByUser({
+      userId: req.userId,
+      filter: JSON.parse(req.query.filter)
     });
+
+    const offset = (req.query.page - 1) * req.query.limit;
+
+    const foundGuarantees = 
+      (!totalCountsOfGuarantees) ? [] :
+      await findGuaranteesByUser({
+        userId: req.userId,
+        filter: JSON.parse(req.query.filter),
+        order: (req.query.order) ? req.query.order : "createdAt",
+        limit: req.query.limit,
+        offset: offset
+      });
+
+    res.status(200).json({
+      success: true,
+      message: (foundGuarantees.length) ? 
+        `${foundGuarantees.length} guarantees out of ${totalCountsOfGuarantees}.` : "Nothing found!",
+      totalCount: totalCountsOfGuarantees,
+      page: parseInt(req.query.page),
+      start: offset + ((foundGuarantees.length) ? 1 : 0),
+      end: offset + foundGuarantees.length,
+      value: foundGuarantees
+    });
+
   } catch (err) {
     res.status(400).json({
       success: false,
@@ -118,10 +164,26 @@ const adminConfirmation = async (req, res) => {
   }
 };
 
-router.post("/declareGuarantor", tokenCheck, declareGuarantor);
+const getGuarantorList = async (req, res) => {
+  try {
+    const foundRecords = await findGuarantorsByLoanId(req.query.loanId);
+    res.status(200).json({
+      success: true,
+      foundRecords: foundRecords
+    })
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      err
+    });
+  }
+};
+
+router.post("/addGuarantor", tokenCheck, newGuarantor);
 router.put("/guarantorConfirmation", tokenCheck, guarantorConfirmation);
-router.get("/gurantorRequest", tokenCheck, getGaurantorRequest)
+router.get("/gurantorRequest", tokenCheck, getGaurantorRequest);
 router.get("/waitingAdminConfirmation", tokenCheck, adminCheck, getWaitingAdminConfirmation)
 router.put("/adminConfirmation", tokenCheck, adminCheck, adminConfirmation)
+router.get("/list", tokenCheck, getGuarantorList);
 
 module.exports = router;

@@ -4,10 +4,7 @@ const memFeeToBePaid = async (givenDate, userId) => {
   /*this function returns data of membership fee and related payments for a specified userId
   data will be only before the givenDate provided as argument
   */
- console.log("first of memFeeToBePaid")
   const memFeeList = await findMemFee(userId);
-
-  console.log("memFeeList: ", memFeeList)
 
   if (memFeeList) {
     let memFeeBeforeGivenDate = memFeeList.filter(

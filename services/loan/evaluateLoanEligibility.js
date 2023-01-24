@@ -27,7 +27,6 @@ const evaluateLoaneligibility = async (data) => {
   } else {
     // (3):
     // check eligibility for normal loan
-    // console.log("userData: ", userData)
     if (userData.numberOfLoans.active.normal == 0 && userData.numberOfLoans.requested.normal == 0) {
       evaluation.normal.eligibility = true;
       // eligible for three times the amount of membership fee has been paid so far with the maximum of 10,000

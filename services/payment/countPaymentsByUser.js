@@ -4,7 +4,7 @@ const countPaymentsByUser = async (data) => {
   try {
     const countOfPayments = await Payment.count({
       where: {
-        Userid: data.userId,
+        UserId: data.userId,
         ...data.filter
       }
     });

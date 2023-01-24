@@ -1,7 +1,8 @@
 const loan = require("../../models/loan");
 
 const addLoan = async (data) => {
-  await loan.create(data);
+  const newLoan = await loan.create(data);
+  return newLoan.dataValues
 };
 
 module.exports = addLoan;

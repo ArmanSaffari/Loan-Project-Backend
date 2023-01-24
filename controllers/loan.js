@@ -5,34 +5,62 @@ const evaluateLoanEligiblity = require("../services/loan/evaluateLoanEligibility
 const addLoan = require("../services/loan/addLoan");
 const findLoanByStatus = require("../services/loan/findLoansByStatus");
 const findLoanById = require("../services/loan/findLoansById");
-const findLoanByUser = require("../services/loan/findLoansByUser")
+const findLoansByUser = require("../services/loan/findLoansByUser")
 const updateLoan = require("../services/loan/updateLoan");
 const addCostIncome = require("../services/costIncome/addCostIncome");
 const findInstallmentsSummary = require("../services/installment/findInstallmentsSummary");
 const findInstallmentsByUser = require("../services/installment/findInstallmentsByUser");
 const findInstallmentsByLoan = require("../services/installment/findInstallmentsByLoan");
 const getPaymentData = require("../services/payment/getPaymentData");
+const countLoansByUser = require("../services/loan/countLoansByUser");
 
 const findMyLoans = async (req, res) => {
-  // return all loans belongs to the requested user:
+  // return filtered loans belongs to the requested user:
+  
   try {
-    let foundLoans = await findLoanByUser(req.userId);
+    console.log("I am here", JSON.parse(req.query.filter))
+    const temp = {
+      userId: req.userId,
+      filter: JSON.parse(req.query.filter)
+    }
+    console.log(temp)
+    const totalCountsOfLoans = await countLoansByUser(temp);
+    
+    console.log("totalCountsOfLoans: ",totalCountsOfLoans)
+    const offset = (req.query.page - 1) * req.query.limit;
+
+    let foundLoans = await findLoansByUser({
+      userId: req.userId,
+      filter: JSON.parse(req.query.filter),
+      order: req.query.order,
+      limit: req.query.limit,
+      offset: offset
+    });
+
+    // let foundLoans = await findLoansByUser(req.userId);
+
+    // add installment summary to each loan:
     for (let index = 0; index < foundLoans.length; index++) {
       let summary = await findInstallmentsSummary(foundLoans[index].id);
-      foundLoans[index].installmentSumary = summary[0];
+      foundLoans[index].installmentSummary = summary[0];
     }
+
     res.status(200).json({
-      sucess: true,
+      success: true,
       message: (foundLoans.length) ? 
-        `${foundLoans.length} loan(s) found.` : "There is not any loan for given user id",
+      `${foundLoans.length} payments out of ${totalCountsOfLoans}.` : "There is not any loan for given user id",
+      totalCount: totalCountsOfLoans,
+      page: parseInt(req.query.page),
+      start: offset + ((foundLoans.length) ? 1 : 0),
+      end: offset + foundLoans.length,
       value: foundLoans
-      })
+      });
 
   } catch(err) {
     res.status(400).json({
       success: false,
       err
-    })
+    });
   }
 };
 
@@ -73,18 +101,18 @@ const loanEligiblity = async (req, res) => {
 };
 
 const addLoanRequest = async (req, res) => {
-  const error = { massage: `you are not eligible for ${req.body.loanType} loan!`}
+  const error = { message: `you are not eligible for ${req.body.loanType} loan!`}
   let loanAmount = 0;
   try {
     const evaluation = await evaluateLoanEligiblity({
       userId: req.userId,
       membershipDate: req.userData.membershipDate
     });
-    console.log("evaluation: ", evaluation);
+    
     if (evaluation[req.body.loanType].eligibility) {
       loanAmount = Math.min(req.body.loanAmount , evaluation[req.body.loanType].amount);
       const installmentNo = Math.min(req.body.installmentNo, 24) // max allowed installment No is 24
-      await addLoan({
+      const newLoan = await addLoan({
         UserId: req.userId,
         loanAmount: loanAmount,
         loanType: req.body.loanType,
@@ -92,13 +120,21 @@ const addLoanRequest = async (req, res) => {
         installmentNo: installmentNo, 
         installmentAmount: (loanAmount / installmentNo).toFixed(2)
       });
+
+      res.status(200).json({
+        success: true,
+        message: `${newLoan.loanType} loan with the amount of ${newLoan.loanAmount}$ paying back in ${newLoan.installmentNo} months has been requested!`,
+        newLoan: { 
+          loanId: newLoan.id,
+          loanAmount: newLoan.loanAmount,
+          loanType: newLoan.loanType,
+          installmentNo: newLoan.installmentNo
+        }
+      });
+
     } else {
       throw error
     }
-    res.status(200).json({
-      success: true,
-      message: `${req.body.loanType} loan with the amount of ${loanAmount} has been requested!`
-    });
   } catch(err) {
     res.status(400).json({
       success: false,

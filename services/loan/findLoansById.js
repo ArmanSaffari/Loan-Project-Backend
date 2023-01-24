@@ -1,11 +1,14 @@
 const Loan = require("../../models/loan");
-const sequelize = require("../../configs/db");
+const Guarantor = require("../../models/guarantor");
 
 const findLoansById = async (loanId) => {
   try {
     const foundLoan = await Loan.findOne({
       where: {
         id: loanId
+      },
+      include: {
+        model: Guarantor
       }
     });
     return (foundLoan)? foundLoan.dataValues : null 

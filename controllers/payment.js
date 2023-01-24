@@ -40,7 +40,9 @@ const findMyPayments = async (req, res) => {
 
     const offset = (req.query.page - 1) * req.query.limit;
 
-    const foundPayments = await findPaymentByUser({
+    const foundPayments = 
+     (!totalCountsOfPayments) ? [] :
+     await findPaymentByUser({
       userId: req.userId,
       filter: JSON.parse(req.query.filter),
       order: req.query.order,
@@ -54,10 +56,10 @@ const findMyPayments = async (req, res) => {
         `${foundPayments.length} payments out of ${totalCountsOfPayments}.` : "Nothing found!",
       totalCount: totalCountsOfPayments,
       page: parseInt(req.query.page),
-      start: offset + 1,
+      start: offset + ((foundPayments.length) ? 1 : 0),
       end: offset + foundPayments.length,
       value: foundPayments
-    })
+    });
   } catch (err) {
     res.status(400).json({
       success: false,
@@ -87,42 +89,26 @@ const getWaitingPayment = async (req, res) => {
   }
 };
 
-
-// const confirmPayment = async (req, res) => {
-//   try {
-//     const paymentRecords = req.body.paymentList.map(row => row.id);
-//     const confirmedBy = req.userId;
-
-//     await paymentRecords.map(id => updatePayment(id, confirmedBy));
-//     res.status(200).json({
-//       success: true,
-//       message: "done!"
-//     });
-//   } catch(err) {
-//     res.status(400).json({
-//       success: false,
-//       err
-//     });
-//   }
-// };
-
 const paymentAssignment = async (req, res) => {
   const confirmedBy = req.userId;
   try {
     let response = [];
+
     // loop over payments that are going to be confirmed and assigned!
     for (let index = 0; index < req.body.paymentList.length; index++) {
       let payment = req.body.paymentList[index];
       let foundPayment = await findPayment(payment.id);
       payment.amount = foundPayment.amount;
-      // console.log("foundPayment: ", foundPayment);
+
       // check the username in req body matches the payment id
       if (foundPayment.UserId != payment.UserId) {
         payment.message = "The user id does not match the information of the payment!";
       } else if (foundPayment.confirmation == true) {
+
       // check whether the payment is already confirmed
         payment.message = "The payment is already confirmed!";
       } else {
+
         // gather payments history up to now:
         let userData = await getPaymentData({
           userId: payment.UserId,
@@ -261,7 +247,6 @@ const deletePayment = async (req, res) => {
 
 router.post("/add", tokenCheck, addPayment);
 router.get("/waiting", tokenCheck, adminCheck, getWaitingPayment);
-// router.put("/waiting", tokenCheck, adminCheck, confirmPayment);
 router.post("/paymentAssignment", tokenCheck, adminCheck, paymentAssignment);
 router.get("/myPayments", tokenCheck, findMyPayments);
 router.delete("/", tokenCheck, deletePayment);
