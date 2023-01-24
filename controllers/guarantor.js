@@ -181,7 +181,7 @@ const getGuarantorList = async (req, res) => {
 
 router.post("/addGuarantor", tokenCheck, newGuarantor);
 router.put("/guarantorConfirmation", tokenCheck, guarantorConfirmation);
-router.get("/gurantorRequest", tokenCheck, getGaurantorRequest);
+router.get("/guarantorRequest", tokenCheck, getGaurantorRequest);
 router.get("/waitingAdminConfirmation", tokenCheck, adminCheck, getWaitingAdminConfirmation)
 router.put("/adminConfirmation", tokenCheck, adminCheck, adminConfirmation)
 router.get("/list", tokenCheck, getGuarantorList);

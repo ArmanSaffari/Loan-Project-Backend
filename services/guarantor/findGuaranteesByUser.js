@@ -13,7 +13,7 @@ const findGuaranteesByUser = async (data) => {
         model: User,
         attributes: ["id", "firstName", "lastName", "phoneNumber"]
       }],
-      attributes: [["id", "recordId"], "guarantorConfirmation"],
+      attributes: [["id", "recordId"], "guarantorConfirmation", "adminConfirmation"],
       where: {
         UserId: data.userId,
         ...data.filter
