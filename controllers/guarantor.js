@@ -107,17 +107,17 @@ const getGaurantorRequest = async (req, res) => {
 };
 
 const guarantorConfirmation = async (req, res) => {
-  let message = [];
+  error = { message: "confirmation can not be null"}
   try {
-    for (record of req.body.records) {
-      message.push(
-        await confirmByGaurantor({
-          userId: req.userId,
-          recordId: record.loanId,
-          isConfirmed: record.isConfirmed
-        })
-      );
-    }
+    if (req.body.isConfirmed === null) throw error
+
+    const message = await confirmByGaurantor({
+      userId: req.userId,
+      recordId: req.body.recordId,
+      loanId: req.body.loanId,
+      isConfirmed: req.body.isConfirmed
+    })
+
     res.status(200).json({
       success: true,
       message: message
