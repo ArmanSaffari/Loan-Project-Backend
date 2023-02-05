@@ -5,6 +5,7 @@ const findInstallmentsSummary = require("../installment/findInstallmentsSummary"
 
 const getPaymentData = async (data) => {
   // data must include userId and membershipDate
+
   let extractedData = [];
   let currentDate = new Date();
   // (1) extract membership payments:

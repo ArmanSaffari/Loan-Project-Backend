@@ -7,14 +7,18 @@ const findMemFeePayments = async (data) => {
   // data must include: userId, filter, order, limit, offset
 
   try {
+    const filter = data.filter || {};
+
+    let options = {};
+    if (data.limit) Object.assign(options, {limit: parseInt(data.limit)});
+    if (data.offset) Object.assign(options, {offset: parseInt(data.offset)});
+    if (data.order) Object.assign(options, {order: [[ data.order ,"DESC" ]]});
+
     const foundMemFeePayments = await MemFeePayment.findAll({
       attributes: ['id', 'amount'],
       where: {
-        ...data.filter
+        ...filter
       },
-      order: [
-        [ data.order ,"DESC" ]
-      ],
       include: {
         model: Payment,
         attributes: ["id", "paymentDate", "referenceNo", "confirmation", "attachmentAddress"],
@@ -22,14 +26,13 @@ const findMemFeePayments = async (data) => {
           UserId: data.userId
         }
       },
-      limit: parseInt(data.limit),
-      offset: parseInt(data.offset)
-      
+      ...options
     });
+
     // console.log("foundMemFeePayments: ", foundMemFeePayments);
     return (foundMemFeePayments.length === 0) ? false : foundMemFeePayments.map (row => row.dataValues)
   } catch (err) {
-    console.log('error is: ', err)
+    throw err
   }
 };
 
