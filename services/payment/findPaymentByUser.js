@@ -1,6 +1,7 @@
 const Payment = require("../../models/payment");
 
 const findPaymentByUser = async (data) => {
+  // data must include: userId, filter, order, limit, offset
 
   try {
     const foundPayments = await Payment.findAll({

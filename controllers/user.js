@@ -7,28 +7,14 @@ const checkUser = require("../services/user/signin");
 const tokenCheck = require("../middlewares/tokenCheck");
 const uploadPhoto = require("../middlewares/uploadPhoto");
 const getPaymentData = require("../services/payment/getPaymentData");
+const updateUserInfo = require("../services/user/updateUserInfo");
+const findUser = require("../services/user/findUser");
 
 const bcrypt = require("bcrypt");
 const fs = require('fs');
 const { Buffer } = require('buffer');
 const jwt = require("jsonwebtoken");
 const env = process.env;
-
-const register = async (req, res, next) => {
-  const receivedData = req.body;
-  receivedData.password = bcrypt.hashSync(receivedData.password, 5);
-  try {
-    // validate values
-    await registerValidation(receivedData);
-    // check being unique in db
-    await checkUniqueValues(receivedData);
-    //create user
-    await createUser(receivedData);
-    res.status(201).json({ success: true });
-  } catch (error) {
-    res.status(422).json({ error });
-  }
-};
 
 const registerWithPhoto = async (req, res, next) => {
   const receivedData = JSON.parse(req.body.userData);
@@ -61,11 +47,18 @@ const registerWithPhoto = async (req, res, next) => {
     const token = jwt.sign({ registeredUser }, env.SECRET_KEY, {
       expiresIn: "1 day",
     });
-    res.status(201).json({ success: true,
+
+    res.status(200).json({ success: true,
       message: message,
       token: token });
-  } catch (error) {
-    res.status(422).json({ success: false, error });
+  } catch (err) {
+    
+    res.status(400).json({ 
+      success: false,
+      err: (err.details) ?
+        { message: err.details.map(row => row.message).join("; ") } :
+        err
+    });
   }
 };
 
@@ -83,8 +76,13 @@ const signin = async (req, res) => {
       sucess: true,
       token: token,
       message: `Hello ${verifiedUser.firstName} ${verifiedUser.lastName}!`, });
-  } catch (error) {
-    res.status(400).json({ sucess: false, error });
+  } catch (err) {
+    res.status(400).json({
+      sucess: false,
+      err: (err.details) ?
+      { message: err.details.map(row => row.message).join("; ") } :
+      err
+    });
   }
 };
 
@@ -106,9 +104,51 @@ const getUserSummary = async (req, res) => {
   }
 };
 
-// using Multer
+const getUserInfo = async (req, res) => {
+  try{
+    const data = await findUser(req.userId);
+    for (let key of ["password", "isAdmin", "userPictureAddress", "createdAt", "updatedAt", "deletedAt"]) {
+      delete data[key];
+    }
+    // delete data.isAdmin, data.userPictureAddress;
+
+    res.status(200).json({
+      success: true,
+      value: data
+    })
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      err
+    });
+  }
+};
+
+const changeUserInfo = async (req, res) => {
+  const error = { message: "provided data is not correct!"};
+  try {
+    const result = await updateUserInfo(req.userId, req.body);
+    if (result && (typeof result) != Error) {
+      res.status(200).json({
+        success: true,
+        message: result.message
+      });
+    } else {
+      throw error
+    }
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      err
+    });
+  }
+};
+
+// using Multer to upload file
 const multer = require('multer');
 const path = require('path');
+const { join } = require("path");
+const findLoansByUser = require("../services/loan/findLoansByUser");
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -123,13 +163,12 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 const uploadMemory = multer({ storage: multer.memoryStorage() })
 
-router.post("/register", register);
+// router.post("/register", register);
 router.post("/registerWithPhoto", uploadMemory.single('userPhoto'), registerWithPhoto)
-
 router.post("/signin", signin);
 router.get("/tokenCheck", tokenCheck, (req, res) => {res.status(200).json({ success: true })});
 router.post("/uploadPhoto", upload.single('userPhoto'), uploadPhoto)
-
-router.get("/summary", tokenCheck, getUserSummary)
-
+router.get("/summary", tokenCheck, getUserSummary);
+router.get("/info", tokenCheck, getUserInfo)
+router.put("/info", tokenCheck, changeUserInfo)
 module.exports = router;

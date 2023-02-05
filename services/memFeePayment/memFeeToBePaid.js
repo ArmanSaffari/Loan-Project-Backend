@@ -1,4 +1,4 @@
-const findMemFee = require("../memFee/findMemFee");
+const findMemFee = require("../memFee/findMemFeeByUser");
 
 const memFeeToBePaid = async (givenDate, userId) => {
   /*this function returns data of membership fee and related payments for a specified userId

@@ -1,6 +1,6 @@
 const router = require("express").Router();
 const tokenCheck = require("../middlewares/tokenCheck");
-const findMemFee = require("../services/memFee/findMemFee")
+const findMemFeeByUser = require("../services/memFee/findMemFeeByUser")
 const addMemFee = require("../services/memFee/addMemFee");
 const waitingMemFee = require("../services/memFee/waitingMemFee");
 const adminCheck = require("../middlewares/adminCheck");
@@ -8,17 +8,23 @@ const updateMemFee = require("../services/memFee/updateMemFee");
 const findMemFeePayments = require("../services/memFeePayment/findMemFeePayments");
 const findMemFeeById = require("../services/memFee/findMemFeeById")
 const deleteMemFee = require("../services/memFee/deleteMemFee");
+const countMemFeeByUser = require("../services/memFee/countMemFeeByUser");
+const countMemFeePaymentByUser = require("../services/memFeePayment/countMemFeePaymentByUser");
 
 const getLastMemFee = async (req, res) => {
   const error = { message: "Monthly Membership Fee has not been set yet!" }
   try {
-    const memFeeList = await findMemFee(req.userId);
+    const memFeeList = await findMemFeeByUser({
+      userId: req.userId,
+    });
     const confirmedMemFeeList = await memFeeList.filter(row => row.confirmation == true)
     if (!confirmedMemFeeList) throw error
     res.status(200).json({
       success: true,
       monthlyMembershipFee: confirmedMemFeeList[0].monthlyMembershipFee,
-      effectiveFrom: confirmedMemFeeList[0].effectiveFrom
+      effectiveFrom: confirmedMemFeeList[0].effectiveFrom,
+      waitingMemFeeExist: (confirmedMemFeeList.length == memFeeList.length) ?
+        false : true
     });
   } catch(err) {
     res.status(400).json({
@@ -49,7 +55,7 @@ const setMemFee = async (req, res) => {
       throw error
     }
   } catch(err) {
-    res.status(406).json({
+    res.status(400).json({
       success: false,
       err
     });
@@ -59,10 +65,33 @@ const setMemFee = async (req, res) => {
 const getMemFeeList = async (req, res) => {
   const error = { message: "Monthly Membership Fee has not been set yet!" }
   try {
-    const memFeeList = await findMemFee(req.userId)
-    if (!memFeeList) throw error
+    const filter = (req.query.filter) ? JSON.parse(req.query.filter) : {};
+
+    const totalCountsOfMemFee = await countMemFeeByUser({
+      userId: req.userId,
+      filter
+    });
+
+    if (totalCountsOfMemFee == 0) throw error
+
+    const offset = (req.query.page - 1) * req.query.limit;
+    
+    const memFeeList = await findMemFeeByUser({
+      userId: req.userId,
+      filter,
+      order: (req.query.order) ? req.query.order : "createdAt",
+      limit: req.query.limit,
+      offset: offset
+    });
+
     res.status(200).json({
       success: true,
+      message: (memFeeList.length) ? 
+        `${memFeeList.length} payments out of ${totalCountsOfMemFee}.` : "Nothing found!",
+      totalCount: totalCountsOfMemFee,
+      page: parseInt(req.query.page),
+      start: offset + ((memFeeList.length) ? 1 : 0),
+      end: offset + memFeeList.length,
       value: memFeeList
     });
   } catch(err) {
@@ -109,10 +138,36 @@ const confirmMemFee = async (req, res) => {
 };
 
 const findMyMemFeePayment = async (req, res) => {
+  const error = { message: "Nothing Found!" }
+
   try {
-    const foundMemFeePayments = await findMemFeePayments(req.userId);
+    const filter = (req.query.filter) ? JSON.parse(req.query.filter) : {};
+
+    const totalCountsOfMemFeePayment = await countMemFeePaymentByUser({
+      userId: req.userId,
+      filter
+    });
+
+    if (totalCountsOfMemFeePayment == 0) throw error
+
+    const offset = (req.query.page - 1) * req.query.limit;
+
+    const foundMemFeePayments = await findMemFeePayments({
+      userId: req.userId,
+      filter,
+      order: (req.query.order) ? req.query.order : "createdAt",
+      limit: req.query.limit,
+      offset: offset
+    });
+
     res.status(200).json({
       success: true,
+      message: (foundMemFeePayments.length) ? 
+        `${foundMemFeePayments.length} payments out of ${totalCountsOfMemFeePayment}.` : "Nothing found!",
+      totalCount: totalCountsOfMemFeePayment,
+      page: parseInt(req.query.page),
+      start: offset + ((foundMemFeePayments.length) ? 1 : 0),
+      end: offset + foundMemFeePayments.length,
       value: foundMemFeePayments
     })
   } catch(err) {
