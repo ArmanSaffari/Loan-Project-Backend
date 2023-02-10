@@ -5,7 +5,7 @@ const signinValidation = require("../schema/user/signin");
 const checkUniqueValues = require("../services/user/checkUnique");
 const checkUser = require("../services/user/signin");
 const tokenCheck = require("../middlewares/tokenCheck");
-const uploadPhoto = require("../middlewares/uploadPhoto");
+// const uploadPhoto = require("../middlewares/uploadPhoto");
 const getPaymentData = require("../services/payment/getPaymentData");
 const updateUserInfo = require("../services/user/updateUserInfo");
 const findUser = require("../services/user/findUser");
@@ -75,6 +75,7 @@ const signin = async (req, res) => {
     res.status(200).json({
       sucess: true,
       token: token,
+      isAdmin: verifiedUser.isAdmin,
       message: `Hello ${verifiedUser.firstName} ${verifiedUser.lastName}!`, });
   } catch (err) {
     res.status(400).json({
@@ -145,6 +146,53 @@ const changeUserInfo = async (req, res) => {
   }
 };
 
+const uploadPhoto = async (req, res) => {
+  let message = "";
+  try {
+
+    //check whether the request contains file or not:
+    if (req.file) {
+      const fileBuffer = req.file.buffer;
+      // Check previous user photo:
+      if (req.userData.userPictureAddress) {
+        fs.unlink(req.userData.userPictureAddress, (err) => {
+          if (err) {
+            throw err
+          }
+        });
+      }
+
+      // save the file on the server
+      const newFilePath = "uploads/users/" + req.userData.personnelCode + path.extname(req.file.originalname);
+      fs.writeFile(`./${newFilePath}`, fileBuffer, async (err) => {
+        if (err) {
+          throw err
+        }
+      });
+
+      // change the userPhotoAddress in the database
+      const { message } = updateUserInfo(req.userId,
+        { userPictureAddress: newFilePath }
+      );
+
+    } else {
+      throw { message: "Request doesn't include a file!" }
+    }
+
+    res.status(200).json({
+      success: true,
+      message
+    });
+
+  } catch (err) {
+    
+    res.status(400).json({ 
+      success: false,
+      err
+    });
+  }
+};
+
 // using Multer to upload file
 const multer = require('multer');
 const path = require('path');
@@ -168,8 +216,9 @@ const uploadMemory = multer({ storage: multer.memoryStorage() })
 router.post("/registerWithPhoto", uploadMemory.single('userPhoto'), registerWithPhoto)
 router.post("/signin", signin);
 router.get("/tokenCheck", tokenCheck, (req, res) => {res.status(200).json({ success: true })});
-router.post("/uploadPhoto", upload.single('userPhoto'), uploadPhoto)
+router.post("/uploadPhoto", uploadMemory.single('userPhoto'), uploadPhoto)
 router.get("/summary", tokenCheck, getUserSummary);
-router.get("/info", tokenCheck, getUserInfo)
-router.put("/info", tokenCheck, changeUserInfo)
+router.get("/info", tokenCheck, getUserInfo);
+router.put("/info", tokenCheck, changeUserInfo);
+
 module.exports = router;
