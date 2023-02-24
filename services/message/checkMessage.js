@@ -11,10 +11,10 @@ const checkMessage = async (data) => {
     if (data.limit) Object.assign(options, {limit: parseInt(data.limit)});
     if (data.offset) Object.assign(options, {offset: parseInt(data.offset)});
     if (data.order) Object.assign(options, {order: [[ data.order ,"DESC" ]]});
-
+    
     const foundMessage = await Message.findAll({
       where: {
-        UserId: data.userId,
+        reciepent: data.userId,
         ...filter
       },
       ...options

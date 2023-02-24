@@ -1,4 +1,5 @@
 const router = require("express").Router();
+
 const tokenCheck = require("../middlewares/tokenCheck");
 const adminCheck = require("../middlewares/adminCheck");
 const findPaymentByUser = require("../services/payment/findPaymentByUser");
@@ -60,6 +61,7 @@ const findMyPayments = async (req, res) => {
       end: offset + foundPayments.length,
       value: foundPayments
     });
+
   } catch (err) {
     res.status(400).json({
       success: false,
