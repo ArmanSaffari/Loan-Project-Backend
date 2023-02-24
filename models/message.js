@@ -10,27 +10,34 @@ const Message = sequelize.define(
       autoIncrement: true,
       primaryKey: true
     },
-    reciepantId: {
-      type: DataTypes.INTEGER,
-      allowNull: false
-    },
     content: {
       type: DataTypes.STRING,
       allowNull: false,
     },
     priority: {
-      type: DataTypes.ENUM("Error", "Warning", "General")
+      type: DataTypes.ENUM("Error", "Warning", "General"),
+      allowNull: false
     },
     link: {
       type: DataTypes.STRING,
     },
-
+    isRead: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false
+    },
+    isFlag: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false
+    },
   },
   { paranoid: true }
 );
 
-// define relationships
+// define relationships:
+// this is the reciepent of the message (UserId)
 User.hasMany(Message);
-Message.belongsTo(User);
+Message.belongsTo(User); 
 
 module.exports = Message;
