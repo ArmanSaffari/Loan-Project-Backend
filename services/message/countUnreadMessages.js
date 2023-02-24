@@ -8,7 +8,7 @@ const countUnreadMessages = async (data) => {
 
     const countOfUnreadMessages = await Message.count({
       where: {
-        reciepent: data.userId,
+        UserId: data.userId,
         isRead: false
       }
     });

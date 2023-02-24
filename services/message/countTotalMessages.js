@@ -9,7 +9,7 @@ const countTotalMessages = async (data) => {
 
     const countOfTotalMessages = await Message.count({
       where: {
-        reciepent: data.userId,
+        UserId: data.userId,
         ...filter
       }
     });

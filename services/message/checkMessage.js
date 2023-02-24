@@ -14,7 +14,7 @@ const checkMessage = async (data) => {
     
     const foundMessage = await Message.findAll({
       where: {
-        reciepent: data.userId,
+        UserId: data.userId,
         ...filter
       },
       ...options

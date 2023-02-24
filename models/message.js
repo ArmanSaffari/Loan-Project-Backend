@@ -10,10 +10,6 @@ const Message = sequelize.define(
       autoIncrement: true,
       primaryKey: true
     },
-    reciepent: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
     date: {
       type: DataTypes.DATE,
       allowNull: false,
