@@ -40,19 +40,22 @@ const registerWithPhoto = async (req, res, next) => {
     // create user
     await createUser(receivedData);
     message = `Registeration was successful ${message}.`;
-    // create token
-    const registeredUser = receivedData;
-    delete registeredUser.password;
-    const token = jwt.sign({ registeredUser }, env.SECRET_KEY, {
-      expiresIn: "1 day",
-    });
+    // // create token
+    // const registeredUser = receivedData;
+    // delete registeredUser.password;
+    // const token = jwt.sign({ registeredUser }, env.SECRET_KEY, {
+    //   expiresIn: "1 day",
+    // });
 
-    res.status(200).json({ success: true,
+    res.status(200).json({
+      success: true,
       message: message,
-      token: token });
+      // token: token,
+      // isAdmin: registeredUser.isAdmin
+    });
+      
   } catch (err) {
-    
-    res.status(400).json({ 
+    res.status(200).json({ 
       success: false,
       err: (err.details) ?
         { message: err.details.map(row => row.message).join("; ") } :
@@ -67,6 +70,8 @@ const signin = async (req, res) => {
     await signinValidation(receivedData);
     // verify email and password
     const { verifiedUser } = await checkUser(receivedData);
+    console.log(verifiedUser)
+
     // create token
     const token = jwt.sign({ verifiedUser }, env.SECRET_KEY, {
       expiresIn: "1 day",
