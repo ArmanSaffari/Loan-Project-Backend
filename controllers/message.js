@@ -62,7 +62,7 @@ const getMessages = async (req, res) => {
 
 const readMessage = async (req, res) => {
   try {
-    // console.log(req.body.messageId)
+    console.log(req.body)
     const result = await changeMessageToRead ({
       userId: req.userId,
       messageId: req.body.messageId

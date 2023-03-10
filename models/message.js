@@ -10,16 +10,19 @@ const Message = sequelize.define(
       autoIncrement: true,
       primaryKey: true
     },
+    title: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
     date: {
       type: DataTypes.DATE,
       allowNull: false,
     },
     content: {
       type: DataTypes.STRING,
-      allowNull: false,
     },
     priority: {
-      type: DataTypes.ENUM("Error", "Warning", "General"),
+      type: DataTypes.ENUM("warning", "info"),
       allowNull: false
     },
     link: {
