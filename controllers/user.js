@@ -8,6 +8,7 @@ const tokenCheck = require("../middlewares/tokenCheck");
 const getPaymentData = require("../services/payment/getPaymentData");
 const updateUserInfo = require("../services/user/updateUserInfo");
 const findUser = require("../services/user/findUser");
+const sendMessage = require("../services/message/sendMessage");
 
 const bcrypt = require("bcrypt");
 const fs = require('fs');
@@ -38,20 +39,31 @@ const registerWithPhoto = async (req, res, next) => {
       })
     }
     // create user
-    await createUser(receivedData);
+    let newUserId = await createUser(receivedData);
     message = `Registeration was successful ${message}.`;
-    // // create token
-    // const registeredUser = receivedData;
-    // delete registeredUser.password;
-    // const token = jwt.sign({ registeredUser }, env.SECRET_KEY, {
-    //   expiresIn: "1 day",
-    // });
+
+    await sendMessage({
+      UserId: newUserId,
+      title: "Welcome to Kish Financial Institute!",
+      date: new Date(),
+      content: "Great to have you with us, our customer services are available to help you. don't hesitate to give theme a call or email them.",
+      priority: "info",
+      isFlag: false
+    });
+
+    await sendMessage({
+      UserId: newUserId,
+      title: "What to do Next!",
+      date: new Date(),
+      content: "To contribute to the institute and receive loans in return, you need to start paying membership fee. To do so, go to MEMBERSHIP page and press 'Request to increase' accordion to set initial monthly membership fee. (link is also provided below)",
+      priority: "info",
+      link: "/membership",
+      isFlag: false
+    });
 
     res.status(200).json({
       success: true,
-      message: message,
-      // token: token,
-      // isAdmin: registeredUser.isAdmin
+      message: message
     });
       
   } catch (err) {

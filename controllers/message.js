@@ -36,7 +36,7 @@ const getMessages = async (req, res) => {
     const foundMessages = await checkMessage ({
       userId: req.userId,
       filter: (req.query.filter) ? JSON.parse(req.query.filter) : null,
-      order: (req.query.order) ? req.query.order : null,
+      order: (req.query.order) ? req.query.order : "createdAt",
       limit: req.query.limit,
       offset: offset
     });
@@ -67,7 +67,7 @@ const readMessage = async (req, res) => {
       userId: req.userId,
       messageId: req.body.messageId
     });
-// throw "here!"
+
     res.status(200).json({
       success: true,
       result

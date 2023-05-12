@@ -6,32 +6,43 @@ const findInstallmentsSummary = require("../installment/findInstallmentsSummary"
 const getPaymentData = async (data) => {
   // data must include userId and membershipDate
   
-  let extractedData = [];
   let currentDate = new Date();
-  // (1) extract membership payments:
-
-  // find how many membership fee should be paid so far
   let membershipDate = new Date(data.membershipDate);
 
-  extractedData = {
-    userId: data.usmemFeeListerId,
-    membershipDate: membershipDate,
-    memFeeToBePaid: await memFeeToBePaid(currentDate, data.userId),
-    memFee: await sumOfMemFee(data.userId),
-    memFeeRemained: "",
-    numberOfLoans: {
-      total: {normal: 0, urgent: 0},
-      active: {normal: 0, urgent: 0},
-      requested: {normal: 0, urgent: 0}
-    }, 
-    installments: [],
-    dataGatheringDate: currentDate
+  // (1) create DATA (extractedData):
+  let extractedData = {
+    userId: data.userId,
+    membershipDate: membershipDate
   }
+
+  // (2) Membership fee payments:
+  // (2-1) Membership fee MUST be paid so far:
+  // It returns: value; lastMemFee; lastMemFeeEffectiveFrom; message
+  extractedData.memFeeToBePaid = await memFeeToBePaid(currentDate, data.userId),
+  
+  // (2-2) Membership Fee HAS BEEN PAID so far:
+  // It returns: count; sum
+
+  extractedData.memFee = await sumOfMemFee(data.userId),
+
+  // (2-3) Membership Fee REMAINED to be paid up to now:
   extractedData.memFeeRemained =
     extractedData.memFeeToBePaid.value - extractedData.memFee.sum;
-  extractedData.installmentRemained = 0;
-  // (2) evaluate loans
 
+  // (3) Loans:
+  extractedData.numberOfLoans = {
+    total: {normal: 0, urgent: 0},
+    active: {normal: 0, urgent: 0},
+    requested: {normal: 0, urgent: 0}
+  },
+
+  extractedData.installments = [],
+  extractedData.dataGatheringDate = currentDate
+
+  
+  extractedData.installmentRemained = 0;
+
+  // (2) evaluate loan:
   let loans = await findLoansByUser(data.userId);
 
   if (loans) {

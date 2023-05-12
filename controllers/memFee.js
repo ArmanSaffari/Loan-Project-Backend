@@ -10,13 +10,15 @@ const findMemFeeById = require("../services/memFee/findMemFeeById")
 const deleteMemFee = require("../services/memFee/deleteMemFee");
 const countMemFeeByUser = require("../services/memFee/countMemFeeByUser");
 const countMemFeePaymentByUser = require("../services/memFeePayment/countMemFeePaymentByUser");
+const sendMessage = require("../services/message/sendMessage");
 
 const getLastMemFee = async (req, res) => {
   const error = { message: "Monthly Membership Fee has not been set yet!" }
   try {
     const memFeeList = await findMemFeeByUser({
-      userId: req.userId,
+      userId: req.userId
     });
+    
     const confirmedMemFeeList = await memFeeList.filter(row => row.confirmation == true)
     if (!confirmedMemFeeList) throw error
     res.status(200).json({
@@ -39,7 +41,13 @@ const setMemFee = async (req, res) => {
   try {
     const newMemFee = req.body.monthlyMembershipFee;
     // check that is the value greater than the previous one in db
-    const memFeeList = await findMemFee(req.userId)
+    const memFeeList = await findMemFeeByUser({
+      userId: req.userId,
+      filter: {confirmation: true},
+      order: "createdAt",
+      limit: 1
+    })
+
     if (!memFeeList || newMemFee > memFeeList[0].monthlyMembershipFee ) {
       // add new record to membershipFee table
       await addMemFee({ 
@@ -47,10 +55,19 @@ const setMemFee = async (req, res) => {
         monthlyMembershipFee: newMemFee,
         effectiveFrom: req.body.effectiveFrom
       });
+
+      await sendMessage({
+        UserId: req.userId,
+        title: "New membership fee has been submitted!",
+        date: new Date(),
+        content: `Your monthly membership fee request has been successfully added. You will be informed once it gets approved by the admin.`,
+        priority: "info"
+      });
+
       res.status(200).json({
         success: true,
         message: `membership fee increased to ${newMemFee} $`
-      })
+      });
     } else {
       throw error
     }
@@ -63,7 +80,6 @@ const setMemFee = async (req, res) => {
 };
 
 const getMemFeeList = async (req, res) => {
-  const error = { message: "Monthly Membership Fee has not been set yet!" }
   try {
     const filter = (req.query.filter) ? JSON.parse(req.query.filter) : {};
 
@@ -72,28 +88,41 @@ const getMemFeeList = async (req, res) => {
       filter
     });
 
-    if (totalCountsOfMemFee == 0) throw error
+    if (totalCountsOfMemFee == 0) {
 
-    const offset = (req.query.page - 1) * req.query.limit;
-    
-    const memFeeList = await findMemFeeByUser({
-      userId: req.userId,
-      filter,
-      order: (req.query.order) ? req.query.order : "createdAt",
-      limit: req.query.limit,
-      offset: offset
-    });
+      res.status(200).json({
+        success: true,
+        value: [],
+        message: "Monthly Membership Fee has not been set yet!",
+        totalCount: totalCountsOfMemFee,
+        page: 1,
+        start: 0,
+        end: 0,
+      });
 
-    res.status(200).json({
-      success: true,
-      message: (memFeeList.length) ? 
-        `${memFeeList.length} payments out of ${totalCountsOfMemFee}.` : "Nothing found!",
-      totalCount: totalCountsOfMemFee,
-      page: parseInt(req.query.page),
-      start: offset + ((memFeeList.length) ? 1 : 0),
-      end: offset + memFeeList.length,
-      value: memFeeList
-    });
+    } else {
+
+      const offset = (req.query.page - 1) * req.query.limit;
+      
+      const memFeeList = await findMemFeeByUser({
+        userId: req.userId,
+        filter,
+        order: (req.query.order) ? req.query.order : "createdAt",
+        limit: req.query.limit,
+        offset: offset
+      });
+      
+      res.status(200).json({
+        success: true,
+        message: (memFeeList.length) ? 
+          `${memFeeList.length} payments out of ${totalCountsOfMemFee}.` : "Nothing found!",
+        totalCount: totalCountsOfMemFee,
+        page: parseInt(req.query.page),
+        start: offset + ((memFeeList.length) ? 1 : 0),
+        end: offset + memFeeList.length,
+        value: memFeeList
+      });
+    }
   } catch(err) {
     res.status(400).json({
       success: false,

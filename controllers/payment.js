@@ -12,6 +12,7 @@ const addMemFeePayment = require("../services/memFeePayment/addMemFeePayment");
 const addInstallment = require("../services/installment/addInstallment")
 const getPaymentData = require("../services/payment/getPaymentData");
 const deleteWaitingPayment = require("../services/payment/deleteWaitingPayment")
+const sendMessage = require("../services/message/sendMessage");
 
 const addPayment = async (req, res) => {
   try {
@@ -105,8 +106,8 @@ const paymentAssignment = async (req, res) => {
       // check the username in req body matches the payment id
       if (foundPayment.UserId != payment.UserId) {
         payment.message = "The user id does not match the information of the payment!";
-      } else if (foundPayment.confirmation == true) {
 
+      } else if (foundPayment.confirmation == true) {
       // check whether the payment is already confirmed
         payment.message = "The payment is already confirmed!";
       } else {
@@ -159,11 +160,11 @@ const paymentAssignment = async (req, res) => {
             // console.log("payment2: ", payment)
           }
         }
-        // (3) if extra
+
+        // (3) if extra remains
         // (3-1) add aditional membershipFee
-        console.log("extra remained!! / remainedAmount: ", remainedAmount)
         while (remainedAmount > 0) {
-          processingAmount = (userData.memFeeToBePaid.lastMemFee < remainedAmount) ?
+          processingAmount = (parseFloat(userData.memFeeToBePaid.lastMemFee) < parseFloat(remainedAmount)) ?
           userData.memFeeToBePaid.lastMemFee : remainedAmount;
           await addMemFeePayment({
             PaymentId: payment.id,
@@ -174,7 +175,8 @@ const paymentAssignment = async (req, res) => {
             table: "membershipPayments",
             amount: parseFloat(processingAmount)
           }); 
-          console.log("membershipPayments added : ", processingAmount)
+
+          // console.log("membershipPayments added : ", processingAmount)
           for (let instIndex = 0; instIndex < userData.numberOfActiveLoans; instIndex++) {
             console.log("remainedAmount: ", remainedAmount) 
             if (remainedAmount > 0) { 
@@ -195,17 +197,39 @@ const paymentAssignment = async (req, res) => {
             }
           }
         }
-        console.log("outside while loop")
+
+        // confirm the payment if remainedAmount reaches 0!
         if (remainedAmount == 0) {
             await updatePayment(payment.id, confirmedBy);
             payment.message = "Payment successfully assigned and confirmed!";
+
+            let messageContent = ''
+            // JSON.stringify(payment.addedRecords);
+            for (let i=0; i<payment.addedRecords.length; i++) {
+              let record = payment.addedRecords[i];
+              messageContent += `${i+1}.  ${record.table} - ${record.amount}$ \n`
+            }
+
+            console.log(messageContent)
+
+            await sendMessage({
+              UserId: payment.UserId,
+              title: "Payment confirmed!",
+              date: new Date(),
+              content: `Your payment successfully assigned and confirmed by the admin!
+                Your Payment includes:` + '\n' + messageContent,
+              priority: "info",
+              link: "/payments"
+            });
+
           } else {
             payment.message = "Something went wrong!";
           }
       }
       response[index] = payment;
-      
+            
     }
+
     await res.status(200).json({
       success: true,
       value: response

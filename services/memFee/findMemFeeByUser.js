@@ -1,7 +1,8 @@
 const MembershipFee = require("../../models/membershipFee");
 
 const findMemFeeByUser = async (data) => {
-  // data must include: userId, filter, order, limit, offset
+  // data must include: userId
+  // Optional: filter, order, limit, offset
 
   try {
     const filter = data.filter || {};

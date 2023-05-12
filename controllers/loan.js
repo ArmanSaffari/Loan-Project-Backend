@@ -144,14 +144,16 @@ const addLoanRequest = async (req, res) => {
 };
 
 const cancelLoanRequest = async (req, res) => {
+  console.log("hi", req.body)
   const error = { massage: "Given loan id does not exist or is not in requested status!"}
   try {
     // (1) check given data
-    const foundLoan = await findLoanById(req.body.loanId);
+    const foundLoan = await findLoanById(req.body.data.recordId);
+    console.log(foundLoan)
     if (foundLoan && foundLoan.loanStatus == "requested") {
       // (2) change loanStatus to "rejected"
       const result = await updateLoan({
-        loanId: req.body.loanId,
+        loanId: req.body.data.recordId,
         loanStatus: "canceled"
       });
       res.status(200).json({
@@ -389,6 +391,7 @@ const terminateLoan = async (req, res) => {
     });
   }
 };
+
 
 router.get("/myLoans", tokenCheck, findMyLoans);
 router.get("/myInstallments", tokenCheck, findMyInstallments);
