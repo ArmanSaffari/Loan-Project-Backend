@@ -12,6 +12,7 @@ const findUser = require("../services/user/findUser");
 const findGuarantorsByLoanId = require("../services/guarantor/findGuarantorsByLoanId");
 const countGuaranteesByUser = require("../services/guarantor/countGuaranteesByUser");
 const findGuaranteesByUser = require("../services/guarantor/findGuaranteesByUser");
+const deleteGuarantor = require("../services/guarantor/deleteGuarantor");
 
 const newGuarantor = async (req, res) => {
   const dataError = { message: "Provided data is not valid!" };
@@ -179,11 +180,28 @@ const getGuarantorList = async (req, res) => {
   }
 };
 
+const removeGuarantor = async (req, res) => {
+
+  try {
+    console.log(req.body)
+    const result = await deleteGuarantor (req.userId, req.body.recordId);
+      res.status(200).json({
+        sucess: true,
+        message: result,
+      });
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      err
+    });
+  }
+};
+
 router.post("/addGuarantor", tokenCheck, newGuarantor);
 router.put("/guarantorConfirmation", tokenCheck, guarantorConfirmation);
 router.get("/guarantorRequest", tokenCheck, getGaurantorRequest);
 router.get("/waitingAdminConfirmation", tokenCheck, adminCheck, getWaitingAdminConfirmation)
 router.put("/adminConfirmation", tokenCheck, adminCheck, adminConfirmation)
 router.get("/list", tokenCheck, getGuarantorList);
-
+router.delete("/", tokenCheck, removeGuarantor);
 module.exports = router;

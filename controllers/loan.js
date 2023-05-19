@@ -13,6 +13,7 @@ const findInstallmentsByUser = require("../services/installment/findInstallments
 const findInstallmentsByLoan = require("../services/installment/findInstallmentsByLoan");
 const getPaymentData = require("../services/payment/getPaymentData");
 const countLoansByUser = require("../services/loan/countLoansByUser");
+const findGuarantorsByLoanId = require("../services/guarantor/findGuarantorsByLoanId")
 
 const findMyLoans = async (req, res) => {
   // return filtered loans belongs to the requested user:
@@ -37,12 +38,15 @@ const findMyLoans = async (req, res) => {
       offset: offset
     });
 
-    // let foundLoans = await findLoansByUser(req.userId);
 
-    // add installment summary to each loan:
     for (let index = 0; index < foundLoans.length; index++) {
+
+      // add installment summary to each loan:
       let summary = await findInstallmentsSummary(foundLoans[index].id);
       foundLoans[index].installmentSummary = summary[0];
+
+      let guarantors = await findGuarantorsByLoanId(foundLoans[index].id);
+      foundLoans[index].guarantors = guarantors;
     }
 
     res.status(200).json({
@@ -144,7 +148,6 @@ const addLoanRequest = async (req, res) => {
 };
 
 const cancelLoanRequest = async (req, res) => {
-  console.log("hi", req.body)
   const error = { massage: "Given loan id does not exist or is not in requested status!"}
   try {
     // (1) check given data
@@ -391,7 +394,6 @@ const terminateLoan = async (req, res) => {
     });
   }
 };
-
 
 router.get("/myLoans", tokenCheck, findMyLoans);
 router.get("/myInstallments", tokenCheck, findMyInstallments);
