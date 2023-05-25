@@ -8,12 +8,12 @@ const findGuaranteesByUser = async (data) => {
     const foundRecords = await Guarantor.findAll({
       include: [{
         model: Loan,
-        attributes: ["id", "loanAmount", "installmentNo", "installmentAmount"]
-      },{
-        model: User,
-        attributes: ["id", "firstName", "lastName", "phoneNumber"]
+        attributes: ["id", "loanAmount", "installmentNo", "installmentAmount"],
+        include: [{
+          model: User,
+          attributes: ["id", "firstName", "lastName", "phoneNumber"]
+        }]
       }],
-      attributes: [["id", "recordId"], "guarantorConfirmation", "adminConfirmation"],
       where: {
         UserId: data.userId,
         ...data.filter

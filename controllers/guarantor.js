@@ -13,6 +13,8 @@ const findGuarantorsByLoanId = require("../services/guarantor/findGuarantorsByLo
 const countGuaranteesByUser = require("../services/guarantor/countGuaranteesByUser");
 const findGuaranteesByUser = require("../services/guarantor/findGuaranteesByUser");
 const deleteGuarantor = require("../services/guarantor/deleteGuarantor");
+const sendMessage = require("../services/message/sendMessage");
+const findLoansById = require("../services/loan/findLoansById");
 
 const newGuarantor = async (req, res) => {
   const dataError = { message: "Provided data is not valid!" };
@@ -108,10 +110,12 @@ const getGaurantorRequest = async (req, res) => {
 };
 
 const guarantorConfirmation = async (req, res) => {
+  console.log(req.body)
   error = { message: "confirmation can not be null"}
   try {
     if (req.body.isConfirmed === null) throw error
 
+    //confirm the request:
     const message = await confirmByGaurantor({
       userId: req.userId,
       recordId: req.body.recordId,
@@ -119,10 +123,30 @@ const guarantorConfirmation = async (req, res) => {
       isConfirmed: req.body.isConfirmed
     })
 
+    // find the related loan:
+    const foundLoan = await findLoansById(req.body.loanId);
+
+    // send message to requestee:
+    // console.log(req.userData);
+    await sendMessage({
+      UserId: foundLoan.UserId,
+      title: (req.body.isConfirmed) ?
+        "Guarantor Request ACCEPTED!" : "Guarantor Request REJECTED!",
+      date: new Date(),
+      content: 
+        `Mr. / Ms. ${req.userData.firstName} ${req.userData.lastName} has
+        ${(req.body.isConfirmed) ? "ACCEPTED" : "REJECTED" }
+         to be your guarantor on loan with the id of ${req.body.loanId}
+        `,
+      link: "/loans",
+      priority: (req.body.isConfirmed) ? "success" : "warning"
+    });
+
     res.status(200).json({
       success: true,
       message: message
     })
+
   } catch (err) {
     res.status(400).json({
       success: false,
