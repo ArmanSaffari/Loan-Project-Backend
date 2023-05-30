@@ -22,5 +22,8 @@
     "mysql2": "^2.3.3",
     "sequelize": "^6.25.8",
     "sqlite3": "^5.1.2"
+  },
+  "devDependencies": {
+    "gh-pages": "^5.0.0"
   }
 }
