@@ -18,7 +18,6 @@ router.use("/account", accountControl);
 router.use("/guarantor", guarantorControl);
 router.use("/file", fileControl);
 router.use("/message", messageControl);
-// router.use(express.static("../public"));
 
 router.get("/", (req, res) => {
   res.send("this is v1");
